@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "701638862340",
+    "project_id": "edubank-junior",
+    "storage_bucket": "edubank-junior.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:701638862340:android:eeaffece91da2a105fb751",
+        "android_client_info": {
+          "package_name": "md.ipltbriceni.edubankjunior"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqCIBifXiAKuREB1vrLyPZDuMU-QTegEc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
