@@ -4,44 +4,71 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import md.ipltbriceni.edubankjunior.data.model.QuizViewModel
 import md.ipltbriceni.edubankjunior.ui.theme.EduBankJuniorTheme
+import md.ipltbriceni.edubankjunior.data.model.TicketsViewModel
+import md.ipltbriceni.edubankjunior.data.repository.LocalQuizRepository
+import md.ipltbriceni.edubankjunior.data.repository.QuizRepository
+import md.ipltbriceni.edubankjunior.ui.screens.QuizScreen
+import md.ipltbriceni.edubankjunior.ui.screens.TicketListScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            EduBankJuniorTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+            val repository = remember { QuizRepository() }
+
+            CompositionLocalProvider(LocalQuizRepository provides repository) {
+                EduBankJuniorTheme(dynamicColor = false) {
+                    val ticketsViewModel = remember {TicketsViewModel(repository)}
+                    val navController = rememberNavController()
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = "dashboard"
+                    ) {
+                        composable("dashboard") {
+                            TicketListScreen(
+                                ticketsViewModel,
+                                onTicketClick = { ticketId ->
+                                    navController.navigate("quiz/$ticketId")
+
+                                }
+
+                            )
+                        }
+
+                        composable(
+                            route = "quiz/{ticketId}",
+                            arguments = listOf(navArgument("ticketId") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            val ticketId = backStackEntry.arguments?.getInt("ticketId") ?: 0
+                            val quizViewModel = remember { QuizViewModel(repository) }
+                            quizViewModel.loadQuestions(ticketId)
+                            QuizScreen(ticketId = ticketId, quizViewModel, {
+                                navController.navigate("dashboard") {
+                                    popUpTo("dashboard") { inclusive = true }
+                                }
+                            })
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    EduBankJuniorTheme {
-        Greeting("Android")
+sealed class Screen(val route: String) {
+    object Dashboard : Screen("dashboard")
+    object Quiz : Screen("quiz/{ticketId}") {
+        fun createRoute(ticketId: Int) = "quiz/$ticketId"
     }
 }
