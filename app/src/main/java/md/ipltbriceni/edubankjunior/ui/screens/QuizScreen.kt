@@ -31,7 +31,7 @@ fun QuizScreen(ticketId: Int, viewModel: QuizViewModel, onNavigateBack: () -> Un
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_back),
                             contentDescription = "Înapoi",
-                            tint = MaterialTheme.colorScheme.primary // Your EduOrange
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
@@ -49,13 +49,6 @@ fun QuizScreen(ticketId: Int, viewModel: QuizViewModel, onNavigateBack: () -> Un
                     .padding(24.dp),
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = "Întrebarea Misiunii $ticketId",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
                 val uiState by viewModel.uiState.collectAsState()
 
                 when (val state = uiState) {
@@ -129,7 +122,7 @@ fun QuizContent(questions: List<Question>, viewModel: QuizViewModel) {
             !viewModel.showFeedback -> MaterialTheme.colorScheme.onSurface
             index == currentQuestion.correctIndex -> Color.Green
             index == viewModel.selectedOptionIndex -> Color.Red
-            else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
         }
 
         AnswerButton(

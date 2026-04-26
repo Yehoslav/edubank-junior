@@ -53,7 +53,7 @@ fun TicketListScreen(viewModel: TicketsViewModel, onTicketClick: (Int) -> Unit) 
             val result = snackbarHostState.showSnackbar(
                 message = message,
                 actionLabel = "Reîncearcă",
-                duration = SnackbarDuration.Indefinite // Stays until clicked
+                duration = SnackbarDuration.Indefinite
             )
 
             if (result == SnackbarResult.ActionPerformed) {
@@ -73,7 +73,10 @@ fun TicketListScreen(viewModel: TicketsViewModel, onTicketClick: (Int) -> Unit) 
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding)) {
+        Box(
+            modifier = Modifier.fillMaxSize().padding(padding),
+            contentAlignment = Alignment.Center
+        ) {
             if (viewModel.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
@@ -121,7 +124,7 @@ fun TicketList(
 @Composable
 fun TicketCard(ticket: Ticket, onTicketClick: (Int) -> Unit) {
     ElevatedCard(
-        onClick = {onTicketClick(ticket.id)},
+        onClick = { onTicketClick(ticket.id) },
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),

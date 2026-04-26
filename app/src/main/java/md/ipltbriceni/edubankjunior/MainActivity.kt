@@ -26,49 +26,39 @@ class MainActivity : ComponentActivity() {
         setContent {
             val repository = remember { QuizRepository() }
 
-            CompositionLocalProvider(LocalQuizRepository provides repository) {
-                EduBankJuniorTheme(dynamicColor = false) {
-                    val ticketsViewModel = remember {TicketsViewModel(repository)}
-                    val navController = rememberNavController()
+            EduBankJuniorTheme(dynamicColor = false) {
+                val navController = rememberNavController()
 
-                    NavHost(
-                        navController = navController,
-                        startDestination = "dashboard"
-                    ) {
-                        composable("dashboard") {
-                            TicketListScreen(
-                                ticketsViewModel,
-                                onTicketClick = { ticketId ->
-                                    navController.navigate("quiz/$ticketId")
+                NavHost(
+                    navController = navController,
+                    startDestination = "dashboard"
+                ) {
+                    composable("dashboard") {
+                        val ticketsViewModel = remember {TicketsViewModel(repository)}
+                        TicketListScreen(
+                            ticketsViewModel,
+                            onTicketClick = { ticketId ->
+                                navController.navigate("quiz/$ticketId")
 
-                                }
+                            }
+                        )
+                    }
 
-                            )
-                        }
-
-                        composable(
-                            route = "quiz/{ticketId}",
-                            arguments = listOf(navArgument("ticketId") { type = NavType.IntType })
-                        ) { backStackEntry ->
-                            val ticketId = backStackEntry.arguments?.getInt("ticketId") ?: 0
-                            val quizViewModel = remember { QuizViewModel(repository) }
-                            quizViewModel.loadQuestions(ticketId)
-                            QuizScreen(ticketId = ticketId, quizViewModel, {
-                                navController.navigate("dashboard") {
-                                    popUpTo("dashboard") { inclusive = true }
-                                }
-                            })
-                        }
+                    composable(
+                        route = "quiz/{ticketId}",
+                        arguments = listOf(navArgument("ticketId") { type = NavType.IntType })
+                    ) { backStackEntry ->
+                        val ticketId = backStackEntry.arguments?.getInt("ticketId") ?: 0
+                        val quizViewModel = remember { QuizViewModel(repository) }
+                        quizViewModel.loadQuestions(ticketId)
+                        QuizScreen(ticketId = ticketId, quizViewModel, {
+                            navController.navigate("dashboard") {
+                                popUpTo("dashboard") { inclusive = true }
+                            }
+                        })
                     }
                 }
             }
         }
-    }
-}
-
-sealed class Screen(val route: String) {
-    object Dashboard : Screen("dashboard")
-    object Quiz : Screen("quiz/{ticketId}") {
-        fun createRoute(ticketId: Int) = "quiz/$ticketId"
     }
 }
