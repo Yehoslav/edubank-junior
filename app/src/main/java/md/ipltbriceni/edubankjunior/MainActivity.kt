@@ -4,18 +4,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
+import md.ipltbriceni.edubankjunior.data.model.AuthViewModel
 import md.ipltbriceni.edubankjunior.data.model.QuizViewModel
 import md.ipltbriceni.edubankjunior.ui.theme.EduBankJuniorTheme
 import md.ipltbriceni.edubankjunior.data.model.TicketsViewModel
-import md.ipltbriceni.edubankjunior.data.repository.LocalQuizRepository
 import md.ipltbriceni.edubankjunior.data.repository.QuizRepository
+import md.ipltbriceni.edubankjunior.ui.screens.AuthScreen
 import md.ipltbriceni.edubankjunior.ui.screens.DashboardScreen
 import md.ipltbriceni.edubankjunior.ui.screens.QuizScreen
 import md.ipltbriceni.edubankjunior.ui.screens.TicketListScreen
@@ -23,9 +26,13 @@ import md.ipltbriceni.edubankjunior.ui.screens.TicketListScreen
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val db = Firebase.firestore
+        val auth = Firebase.auth
+
         enableEdgeToEdge()
         setContent {
-            val repository = remember { QuizRepository() }
+            val repository = remember { QuizRepository(auth, db) }
             val ticketsViewModel = remember { TicketsViewModel(repository) }
 
             EduBankJuniorTheme(dynamicColor = false) {
@@ -33,8 +40,19 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = "dashboard"
+                    startDestination = if (auth.currentUser == null) "auth" else "dashboard"
                 ) {
+                    composable("auth") {
+                        val authViewModel = remember { AuthViewModel(repository) }
+                        AuthScreen(authViewModel, onAuthSuccess = {
+
+                            navController.navigate("dashboard") {
+                                popUpTo("dashboard") { inclusive = true }
+                            }
+                        })
+                    }
+
+
                     composable("dashboard/tickets") {
                         TicketListScreen(
                             ticketsViewModel,
@@ -56,7 +74,13 @@ class MainActivity : ComponentActivity() {
                             onAllTicketsClick = { navController.navigate("dashboard/tickets") },
                             onQuickTestClick = { ticketId -> navController.navigate("quiz/$ticketId") },
                             onProgressClick = {},
-                            onTicketClick = { ticketId -> navController.navigate("quiz/$ticketId") }
+                            onTicketClick = { ticketId -> navController.navigate("quiz/$ticketId") },
+                            onLogout = {
+                                repository.signOut()
+                                navController.navigate("auth") {
+                                    popUpTo("dashboard") { inclusive = true }
+                                }
+                            }
                         )
                     }
 

@@ -13,6 +13,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -23,7 +26,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,7 +50,8 @@ fun DashboardScreen(
     onAllTicketsClick: () -> Unit,
     onQuickTestClick: (Int) -> Unit,
     onProgressClick: () -> Unit,
-    onTicketClick: (Int) -> Unit
+    onTicketClick: (Int) -> Unit,
+    onLogout: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val tickets by viewModel.tickets.collectAsState()
@@ -67,7 +73,7 @@ fun DashboardScreen(
 
 
     Scaffold(
-        topBar = { DashboardHeader() }
+        topBar = { DashboardHeader(onLogout = onLogout) }
     ) { padding ->
 
         Column(
@@ -98,27 +104,55 @@ fun DashboardScreen(
 }
 
 @Composable
-fun DashboardHeader(modifier: Modifier = Modifier) {
-    Column(
+fun DashboardHeader(modifier: Modifier = Modifier, onLogout: () -> Unit = {}) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    Row(
         modifier = modifier
             .statusBarsPadding() // Dynamically adds margin for the status bar/notch
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 18.dp, vertical = 12.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "EduBank Junior",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = "Învață despre bani",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Column {
+            Text(
+                text = "EduBank Junior",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = "Învață despre bani",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Box {
+            IconButton(onClick = { showMenu = true }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_list), // Using ic_list as a placeholder or we can use a person icon if available
+                    contentDescription = "Cont",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Log out") },
+                    onClick = {
+                        showMenu = false
+                        onLogout()
+                    }
+                )
+            }
+        }
     }
 }
 
-@Preview
 @Composable
 fun HeroProgressCard(onStartClick: () -> Unit = {}) {
     Card(

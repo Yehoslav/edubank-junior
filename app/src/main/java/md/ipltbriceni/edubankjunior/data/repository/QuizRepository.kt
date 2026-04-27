@@ -8,10 +8,15 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.channels.awaitClose
 
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
-class QuizRepository {
-    private val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-
+class QuizRepository(
+    private val auth: FirebaseAuth,
+    private val db: FirebaseFirestore
+) {
     fun getTickets(onSuccess: (List<Ticket>) -> Unit, onFailure: (Exception) -> Unit) {
         db.collection("tickets")
             .orderBy("id")
@@ -44,11 +49,27 @@ class QuizRepository {
         // Clean up the listener when the flow is closed
         awaitClose { subscription.remove() }
     }
-}
 
+    // --- Authentication Logic ---
 
-// We use staticCompositionLocalOf because the Repository 
-// instance won't change during the app's lifetime.
-val LocalQuizRepository = staticCompositionLocalOf<QuizRepository> {
-    error("No QuizRepository provided! Check your MainActivity setContent.")
+    suspend fun signUp(email: String, pass: String) {
+        val result = auth.createUserWithEmailAndPassword(email, pass).await()
+        val uid = result.user?.uid ?: return
+        val initialProfile = mapOf(
+            "email" to email,
+            "totalScore" to 0,
+            "progress" to emptyMap<String, Int>(),
+            "role" to "student"
+        )
+        db.collection("users").document(uid).set(initialProfile).await()
+    }
+
+    suspend fun signIn(email: String, pass: String) {
+        auth.signInWithEmailAndPassword(email, pass).await()
+    }
+
+    fun signOut() {
+        auth.signOut()
+    }
+
 }
