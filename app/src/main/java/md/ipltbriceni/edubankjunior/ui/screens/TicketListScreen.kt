@@ -45,12 +45,13 @@ import androidx.compose.ui.unit.dp
 import md.ipltbriceni.edubankjunior.R
 import md.ipltbriceni.edubankjunior.data.model.TicketsViewModel
 import md.ipltbriceni.edubankjunior.data.model.Ticket
+import md.ipltbriceni.edubankjunior.data.model.TicketProgress
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TicketListScreen(viewModel: TicketsViewModel, onTicketClick: (Int) -> Unit, onNavigateBack: () -> Unit) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val tickets by viewModel.tickets.collectAsState()
+    val ticketsWithProgress by viewModel.tickets.collectAsState()
 
     // Listen for error events from the ViewModel
     LaunchedEffect(Unit) {
@@ -104,23 +105,25 @@ fun TicketListScreen(viewModel: TicketsViewModel, onTicketClick: (Int) -> Unit, 
             if (viewModel.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
-                TicketList(tickets, onTicketClick)
+                TicketList(ticketsWithProgress, onTicketClick)
             }
         }
     }
 }
 
-class TicketProvider : PreviewParameterProvider<List<Ticket>> {
+class TicketProvider : PreviewParameterProvider<List<Pair<Ticket, TicketProgress?>>> {
     override val values = sequenceOf(
         emptyList(), // Test empty state
-        List(5) { Ticket(it, "Bilet Repetat $it") } // Test scrolling
+        List(5) { 
+            Ticket(it, "Bilet Repetat $it") to if (it % 2 == 0) TicketProgress(8, 10) else null
+        } 
     )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun TicketList(
-    @PreviewParameter(TicketProvider::class) tickets: List<Ticket>,
+    @PreviewParameter(TicketProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>,
     onTicketClick: (Int) -> Unit = {},
 ) {
     LazyColumn(
@@ -130,19 +133,23 @@ fun TicketList(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(tickets) { ticket ->
-            TicketCard(ticket, onTicketClick)
+        items(tickets) { (ticket, progress) ->
+            TicketCard(ticket, progress, onTicketClick)
         }
     }
 }
 
 @Composable
-fun TicketCard(ticket: Ticket, onTicketClick: (Int) -> Unit) {
+fun TicketCard(ticket: Ticket, progress: TicketProgress?, onTicketClick: (Int) -> Unit) {
+    val isCompleted = progress != null
+    val containerColor = if (isCompleted) Color(0xFFE8F5E9) else Color.White
+    val iconColor = if (isCompleted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
+
     ElevatedCard(
         onClick = { onTicketClick(ticket.id) },
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -152,7 +159,7 @@ fun TicketCard(ticket: Ticket, onTicketClick: (Int) -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Bilet ${ticket.id}",
                     style = MaterialTheme.typography.labelMedium,
@@ -163,11 +170,19 @@ fun TicketCard(ticket: Ticket, onTicketClick: (Int) -> Unit) {
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
+                if (isCompleted) {
+                    Text(
+                        text = "Scor: ${progress?.correct}/${progress?.total}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF2E7D32),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_forward),
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+                tint = iconColor
             )
         }
     }

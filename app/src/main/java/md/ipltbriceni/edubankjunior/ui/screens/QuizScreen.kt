@@ -55,6 +55,7 @@ fun QuizScreen(ticketId: Int, viewModel: QuizViewModel, onNavigateBack: () -> Un
                     is QuizUiState.Loading -> CircularProgressIndicator()
                     is QuizUiState.Success -> {
                         if (viewModel.isMissionComplete) {
+                            viewModel.finishQuiz(ticketId, viewModel.score, state.questions.size, {})
                             MissionSummary(
                                 score = viewModel.score,
                                 total = state.questions.size,
@@ -117,17 +118,28 @@ fun QuizContent(questions: List<Question>, viewModel: QuizViewModel) {
     Spacer(modifier = Modifier.height(48.dp))
 
     currentQuestion.options.forEachIndexed { index, answer ->
-
-        val buttonColor = when {
-            !viewModel.showFeedback -> MaterialTheme.colorScheme.onSurface
-            index == currentQuestion.correctIndex -> Color.Green
-            index == viewModel.selectedOptionIndex -> Color.Red
-            else -> MaterialTheme.colorScheme.onSurfaceVariant
+        val isCorrect = index == currentQuestion.correctIndex
+        val isSelected = index == viewModel.selectedOptionIndex
+        
+        val (containerColor, contentColor) = when {
+            !viewModel.showFeedback -> {
+                Color.White to MaterialTheme.colorScheme.onSurface
+            }
+            isCorrect -> {
+                Color(0xFFE8F5E9) to Color(0xFF2E7D32) // Pleasant Green
+            }
+            isSelected -> {
+                Color(0xFFFFEBEE) to Color(0xFFC62828) // Pleasant Red
+            }
+            else -> {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) to MaterialTheme.colorScheme.onSurfaceVariant
+            }
         }
 
         AnswerButton(
             text = answer,
-            color = buttonColor,
+            containerColor = containerColor,
+            contentColor = contentColor,
             onClick = {
                 viewModel.checkAnswer(index, questions)
             }
@@ -137,22 +149,29 @@ fun QuizContent(questions: List<Question>, viewModel: QuizViewModel) {
 }
 
 @Composable
-fun AnswerButton(text: String, color: Color, onClick: () -> Unit) {
-    Button(
+fun AnswerButton(text: String, containerColor: Color, contentColor: Color, onClick: () -> Unit) {
+    ElevatedCard(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp),
         shape = MaterialTheme.shapes.medium,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = color
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+            contentColor = contentColor
         ),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
     }
 }

@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import md.ipltbriceni.edubankjunior.R
 import md.ipltbriceni.edubankjunior.data.model.Ticket
 import md.ipltbriceni.edubankjunior.data.model.TicketsViewModel
+import md.ipltbriceni.edubankjunior.data.model.TicketProgress
 import md.ipltbriceni.edubankjunior.ui.theme.EduHeroGradient
 
 @Composable
@@ -54,7 +55,7 @@ fun DashboardScreen(
     onLogout: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val tickets by viewModel.tickets.collectAsState()
+    val ticketsWithProgress by viewModel.tickets.collectAsState()
 
     // Listen for error events from the ViewModel
     LaunchedEffect(Unit) {
@@ -87,16 +88,20 @@ fun DashboardScreen(
             if (viewModel.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally).padding(top=20.dp))
             } else {
-                val randomTicketId = if (viewModel.isLoading) {0} else {tickets.random().id}
-                HeroProgressCard({onStartTest(randomTicketId)})
+                val tickets = ticketsWithProgress.map { it.first }
+                val completedCount = ticketsWithProgress.count { it.second != null }
+                val totalCount = ticketsWithProgress.size
+                val randomTicketId = if (tickets.isEmpty()) 0 else tickets.random().id
+
+                HeroProgressCard(completedCount, totalCount, { onStartTest(randomTicketId) })
 
                 ActionButtonsRow(
-                    onQuickTest = {onQuickTestClick(randomTicketId)},
+                    onQuickTest = { onQuickTestClick(randomTicketId) },
                     onAllTickets = onAllTicketsClick,
                     onProgress = onProgressClick
                 )
 
-                NextTicketsSection(tickets.take(4), onTicketClick)
+                NextTicketsSection(ticketsWithProgress.take(4), onTicketClick)
             }
         }
 
@@ -154,7 +159,7 @@ fun DashboardHeader(modifier: Modifier = Modifier, onLogout: () -> Unit = {}) {
 }
 
 @Composable
-fun HeroProgressCard(onStartClick: () -> Unit = {}) {
+fun HeroProgressCard(completed: Int, total: Int, onStartClick: () -> Unit = {}) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -173,7 +178,7 @@ fun HeroProgressCard(onStartClick: () -> Unit = {}) {
                     style = MaterialTheme.typography.titleLarge
                 )
                 Text(
-                    text = "Ai completat X din Y bilete",
+                    text = "Ai completat $completed din $total bilete",
                     color = Color.White.copy(alpha = 0.8f),
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -256,7 +261,7 @@ fun ActionButtonsRow(
 }
 
 @Composable
-fun NextTicketsSection(tickets: List<Ticket>, onTicketClick: (Int) -> Unit) {
+fun NextTicketsSection(ticketsWithProgress: List<Pair<Ticket, TicketProgress?>>, onTicketClick: (Int) -> Unit) {
     Column {
         Text(
             text = "Continuă aventura",
@@ -266,8 +271,8 @@ fun NextTicketsSection(tickets: List<Ticket>, onTicketClick: (Int) -> Unit) {
         Spacer(modifier = Modifier.height(12.dp))
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            tickets.forEach { ticket ->
-                TicketCard(ticket, onTicketClick)
+            ticketsWithProgress.forEach { (ticket, progress) ->
+                TicketCard(ticket, progress, onTicketClick)
             }
         }
     }

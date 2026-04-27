@@ -2,6 +2,7 @@ package md.ipltbriceni.edubankjunior.data.repository
 
 import md.ipltbriceni.edubankjunior.data.model.Question
 import md.ipltbriceni.edubankjunior.data.model.Ticket
+import md.ipltbriceni.edubankjunior.data.model.TicketProgress
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -72,4 +73,47 @@ class QuizRepository(
         auth.signOut()
     }
 
+    // --- Progress Logic ---
+
+    fun getUserProgress(): Flow<Map<String, TicketProgress>> = callbackFlow {
+        val uid = auth.currentUser?.uid ?: run {
+            trySend(emptyMap())
+            close()
+            return@callbackFlow
+        }
+
+        val subscription = db.collection("users").document(uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    return@addSnapshotListener
+                }
+
+                val progressMap = snapshot?.get("progress") as? Map<String, Map<String, Any>>
+                val result = progressMap?.mapValues { (_, value) ->
+                    TicketProgress(
+                        correct = (value["correct"] as? Long)?.toInt() ?: 0,
+                        total = (value["total"] as? Long)?.toInt() ?: 0
+                    )
+                } ?: emptyMap()
+
+                trySend(result)
+            }
+
+        awaitClose { subscription.remove() }
+    }
+
+    suspend fun saveTicketScore(ticketId: Int, correct: Int, total: Int) {
+        val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
+
+        // Storing as a nested object: progress -> ticketId -> {correct, total}
+        val updates = mapOf(
+            "progress.$ticketId.correct" to correct,
+            "progress.$ticketId.total" to total,
+            "progress.$ticketId.timestamp" to FieldValue.serverTimestamp()
+        )
+
+        db.collection("users").document(uid)
+            .update(updates)
+            .await()
+    }
 }

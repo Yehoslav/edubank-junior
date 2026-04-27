@@ -1,5 +1,6 @@
 package md.ipltbriceni.edubankjunior.data.model
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -71,6 +72,27 @@ class QuizViewModel(
                     onSuccess = { _uiState.value = QuizUiState.Success(it) },
                     onFailure = { _uiState.value = QuizUiState.Error(it.message ?: "Unknown Error") }
                 )
+            }
+        }
+    }
+
+    var isSaving by mutableStateOf(false)
+        private set
+
+    /**
+     * Called when the student finishes the last question.
+     */
+    fun finishQuiz(ticketId: Int, correct: Int, total: Int, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            isSaving = true
+            try {
+                repository.saveTicketScore(ticketId, correct, total)
+                onComplete() // Navigate back to Dashboard
+            } catch (e: Exception) {
+                Log.e("QuizViewModel", "Failed to save score", e)
+                // Optionally show a Toast error here
+            } finally {
+                isSaving = false
             }
         }
     }
