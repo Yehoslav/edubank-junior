@@ -13,9 +13,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
@@ -24,6 +27,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,8 +46,9 @@ import md.ipltbriceni.edubankjunior.R
 import md.ipltbriceni.edubankjunior.data.model.TicketsViewModel
 import md.ipltbriceni.edubankjunior.data.model.Ticket
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TicketListScreen(viewModel: TicketsViewModel, onTicketClick: (Int) -> Unit) {
+fun TicketListScreen(viewModel: TicketsViewModel, onTicketClick: (Int) -> Unit, onNavigateBack: () -> Unit) {
     val snackbarHostState = remember { SnackbarHostState() }
     val tickets by viewModel.tickets.collectAsState()
 
@@ -71,6 +76,25 @@ fun TicketListScreen(viewModel: TicketsViewModel, onTicketClick: (Int) -> Unit) 
                     snackbarData = data
                 )
             }
+        },
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text("Bilete de Studiu", style = MaterialTheme.typography.titleLarge)
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_arrow_back),
+                            contentDescription = "Înapoi",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                )
+            )
         }
     ) { padding ->
         Box(
@@ -106,15 +130,6 @@ fun TicketList(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        item {
-            Text(
-                text = "Bilete de studiu",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        }
-
         items(tickets) { ticket ->
             TicketCard(ticket, onTicketClick)
         }

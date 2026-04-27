@@ -16,6 +16,7 @@ import md.ipltbriceni.edubankjunior.ui.theme.EduBankJuniorTheme
 import md.ipltbriceni.edubankjunior.data.model.TicketsViewModel
 import md.ipltbriceni.edubankjunior.data.repository.LocalQuizRepository
 import md.ipltbriceni.edubankjunior.data.repository.QuizRepository
+import md.ipltbriceni.edubankjunior.ui.screens.DashboardScreen
 import md.ipltbriceni.edubankjunior.ui.screens.QuizScreen
 import md.ipltbriceni.edubankjunior.ui.screens.TicketListScreen
 
@@ -25,6 +26,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val repository = remember { QuizRepository() }
+            val ticketsViewModel = remember { TicketsViewModel(repository) }
 
             EduBankJuniorTheme(dynamicColor = false) {
                 val navController = rememberNavController()
@@ -33,14 +35,28 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     startDestination = "dashboard"
                 ) {
-                    composable("dashboard") {
-                        val ticketsViewModel = remember {TicketsViewModel(repository)}
+                    composable("dashboard/tickets") {
                         TicketListScreen(
                             ticketsViewModel,
                             onTicketClick = { ticketId ->
                                 navController.navigate("quiz/$ticketId")
-
+                            },
+                            onNavigateBack = {
+                                navController.navigate("dashboard") {
+                                    popUpTo("dashboard") { inclusive = true }
+                                }
                             }
+                        )
+                    }
+
+                    composable("dashboard") {
+                        DashboardScreen(
+                            viewModel = ticketsViewModel,
+                            onStartTest = { ticketId -> navController.navigate("quiz/$ticketId") },
+                            onAllTicketsClick = { navController.navigate("dashboard/tickets") },
+                            onQuickTestClick = { ticketId -> navController.navigate("quiz/$ticketId") },
+                            onProgressClick = {},
+                            onTicketClick = { ticketId -> navController.navigate("quiz/$ticketId") }
                         )
                     }
 
