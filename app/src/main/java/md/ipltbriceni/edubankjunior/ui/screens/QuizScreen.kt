@@ -1,14 +1,15 @@
 package md.ipltbriceni.edubankjunior.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import md.ipltbriceni.edubankjunior.R
 import md.ipltbriceni.edubankjunior.data.model.Question
@@ -55,7 +56,7 @@ fun QuizScreen(ticketId: Int, viewModel: QuizViewModel, onNavigateBack: () -> Un
                     is QuizUiState.Loading -> CircularProgressIndicator()
                     is QuizUiState.Success -> {
                         if (viewModel.isMissionComplete) {
-                            viewModel.finishQuiz(ticketId, viewModel.score, state.questions.size, {})
+                            viewModel.finishQuiz(ticketId, viewModel.score, state.questions.size, onComplete = {})
                             MissionSummary(
                                 score = viewModel.score,
                                 total = state.questions.size,
@@ -89,7 +90,13 @@ fun MissionSummary(score: Int, total: Int, onExit: () -> Unit) {
         
         Spacer(modifier = Modifier.height(32.dp))
         
-        Button(onClick = onExit) {
+        Button(
+            onClick = onExit,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
             Text("Înapoi la Dashboard")
         }
     }
@@ -151,7 +158,6 @@ fun QuizContent(questions: List<Question>, viewModel: QuizViewModel) {
 @Composable
 fun AnswerButton(text: String, containerColor: Color, contentColor: Color, onClick: () -> Unit) {
     ElevatedCard(
-        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp),
@@ -163,7 +169,12 @@ fun AnswerButton(text: String, containerColor: Color, contentColor: Color, onCli
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = null,
+                    indication = ripple(color = MaterialTheme.colorScheme.primaryContainer)
+                ) { onClick() },
             contentAlignment = Alignment.Center
         ) {
             Text(

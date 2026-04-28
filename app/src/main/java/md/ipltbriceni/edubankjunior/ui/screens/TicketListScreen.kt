@@ -1,6 +1,7 @@
 package md.ipltbriceni.edubankjunior.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -146,44 +148,46 @@ fun TicketCard(ticket: Ticket, progress: TicketProgress?, onTicketClick: (Int) -
     val iconColor = if (isCompleted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
 
     ElevatedCard(
-        onClick = { onTicketClick(ticket.id) },
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
+        Box(
             modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    interactionSource = null,
+                    indication = ripple(color = MaterialTheme.colorScheme.primaryContainer)
+                ) { onTicketClick(ticket.id) }
                 .padding(20.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Bilet ${ticket.id}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = ticket.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                if (isCompleted) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Scor: ${progress?.correct}/${progress?.total}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF2E7D32),
-                        fontWeight = FontWeight.SemiBold
+                        text = ticket.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
                     )
+                    if (isCompleted) {
+                        Text(
+                            text = "Scor: ${progress.correct}/${progress.total}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF2E7D32),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_arrow_forward),
+                    contentDescription = null,
+                    tint = iconColor
+                )
             }
-            Icon(
-                painter = painterResource(id = R.drawable.ic_arrow_forward),
-                contentDescription = null,
-                tint = iconColor
-            )
         }
     }
 }

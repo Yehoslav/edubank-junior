@@ -1,29 +1,14 @@
 package md.ipltbriceni.edubankjunior.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.Icon
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -194,10 +179,13 @@ fun HeroProgressCard(completed: Int, total: Int, onStartClick: () -> Unit = {}) 
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = onStartClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Începe testul", color = MaterialTheme.colorScheme.primary)
+                    Text("Începe testul")
                 }
             }
         }
@@ -212,7 +200,6 @@ fun ActionButtonCard(
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
-        onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -220,6 +207,10 @@ fun ActionButtonCard(
     ) {
         Column(
             modifier = Modifier
+                .clickable(
+                    interactionSource = null,
+                    indication = ripple(color = MaterialTheme.colorScheme.primaryContainer)
+                ) { onClick() }
                 .padding(20.dp)
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.SpaceBetween,
