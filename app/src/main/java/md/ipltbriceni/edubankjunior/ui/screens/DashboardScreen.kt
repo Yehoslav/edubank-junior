@@ -85,17 +85,26 @@ fun DashboardScreen(
                 val tickets = ticketsWithProgress.map { it.first }
                 val completedCount = ticketsWithProgress.count { it.second != null }
                 val totalCount = ticketsWithProgress.size
-                val randomTicketId = if (tickets.isEmpty()) 0 else tickets.random().id
+                
+                // Find the first unanswered ticket, or a random one if all are answered
+                val nextTicketId = ticketsWithProgress.firstOrNull { it.second == null }?.first?.id 
+                    ?: (if (tickets.isEmpty()) 0 else tickets.random().id)
 
-                HeroProgressCard(completedCount, totalCount, onStartClick = { onStartTest(randomTicketId) })
+                HeroProgressCard(completedCount, totalCount, onStartClick = { onStartTest(nextTicketId) })
 
                 ActionButtonsRow(
-                    onQuickTest = { onQuickTestClick(randomTicketId) },
+                    onQuickTest = { onQuickTestClick(nextTicketId) },
                     onAllTickets = onAllTicketsClick,
                     onShowProgress = { showProgressDialog.value = true }
                 )
 
-                NextTicketsSection(ticketsWithProgress.take(4), onTicketClick)
+                val sortedTickets = ticketsWithProgress.sortedWith(
+                    compareBy<Pair<Ticket, TicketProgress?>> { it.second == null } // Unanswered first (false < true, wait)
+                        .reversed() // True (null) first
+                        .thenBy { it.second?.correct ?: 0 } // Then lowest score
+                ).take(4)
+
+                NextTicketsSection(sortedTickets, onTicketClick)
             }
         }
 
