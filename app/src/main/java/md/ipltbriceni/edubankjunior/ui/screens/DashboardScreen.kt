@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.DropdownMenu
@@ -50,12 +52,19 @@ fun DashboardScreen(
     onStartTest: (Int) -> Unit,
     onAllTicketsClick: () -> Unit,
     onQuickTestClick: (Int) -> Unit,
-    onProgressClick: () -> Unit,
     onTicketClick: (Int) -> Unit,
     onLogout: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val ticketsWithProgress by viewModel.tickets.collectAsState()
+    val showProgressDialog = remember { mutableStateOf(false) }
+
+    if (showProgressDialog.value) {
+        ProgressDialog(
+            ticketsWithProgress = ticketsWithProgress,
+            onDismiss = { showProgressDialog.value = false }
+        )
+    }
 
     // Listen for error events from the ViewModel
     LaunchedEffect(Unit) {
@@ -93,12 +102,12 @@ fun DashboardScreen(
                 val totalCount = ticketsWithProgress.size
                 val randomTicketId = if (tickets.isEmpty()) 0 else tickets.random().id
 
-                HeroProgressCard(completedCount, totalCount, { onStartTest(randomTicketId) })
+                HeroProgressCard(completedCount, totalCount, onStartClick = { onStartTest(randomTicketId) })
 
                 ActionButtonsRow(
                     onQuickTest = { onQuickTestClick(randomTicketId) },
                     onAllTickets = onAllTicketsClick,
-                    onProgress = onProgressClick
+                    onShowProgress = { showProgressDialog.value = true }
                 )
 
                 NextTicketsSection(ticketsWithProgress.take(4), onTicketClick)
@@ -232,7 +241,7 @@ fun ActionButtonCard(
 fun ActionButtonsRow(
     onQuickTest: () -> Unit = {},
     onAllTickets: () -> Unit = {},
-    onProgress: () -> Unit = {}
+    onShowProgress: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -254,10 +263,97 @@ fun ActionButtonsRow(
         ActionButtonCard(
             "Progres",
             painterResource(id = R.drawable.ic_chart_data),
-            onProgress,
+            onShowProgress,
             buttonModifier
         )
     }
+}
+
+@Composable
+fun ProgressDialog(
+    ticketsWithProgress: List<Pair<Ticket, TicketProgress?>>,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Progresul tău",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                val totalCorrect = ticketsWithProgress.sumOf { it.second?.correct ?: 0 }
+                val totalQuestions = ticketsWithProgress.sumOf { it.second?.total ?: 0 }
+                val averageScore = if (totalQuestions > 0) (totalCorrect.toFloat() / totalQuestions * 100).toInt() else 0
+                val completedTickets = ticketsWithProgress.count { it.second != null }
+                val totalTickets = ticketsWithProgress.size
+
+                Text(
+                    text = "Până acum ai finalizat $completedTickets din $totalTickets misiuni. Scorul tău mediu de performanță este de $averageScore%. Continuă să înveți!",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                val answeredTickets = ticketsWithProgress.filter { it.second != null }
+                if (answeredTickets.isNotEmpty()) {
+                    Text(
+                        text = "Istoric misiuni:",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    answeredTickets.forEach { (ticket, progress) ->
+                        Column {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = ticket.title,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = "Bilet ${ticket.id}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Text(
+                                    text = "${progress?.correct ?: 0}/${progress?.total ?: 0}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "Încă nu ai finalizat nicio misiune. Începe una pentru a-ți vedea progresul aici!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Închide")
+            }
+        }
+    )
 }
 
 @Composable

@@ -73,7 +73,6 @@ class MainActivity : ComponentActivity() {
                             onStartTest = { ticketId -> navController.navigate("quiz/$ticketId") },
                             onAllTicketsClick = { navController.navigate("dashboard/tickets") },
                             onQuickTestClick = { ticketId -> navController.navigate("quiz/$ticketId") },
-                            onProgressClick = {},
                             onTicketClick = { ticketId -> navController.navigate("quiz/$ticketId") },
                             onLogout = {
                                 repository.signOut()
