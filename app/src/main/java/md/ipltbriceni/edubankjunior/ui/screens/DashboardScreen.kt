@@ -146,7 +146,7 @@ fun DashboardHeader(modifier: Modifier = Modifier, onLogout: () -> Unit = {}) {
         Box {
             IconButton(onClick = { showMenu = true }) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_list), // Using ic_list as a placeholder or we can use a person icon if available
+                    painter = painterResource(id = R.drawable.ic_account_circle),
                     contentDescription = "Cont",
                     tint = MaterialTheme.colorScheme.primary
                 )
