@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
@@ -85,7 +84,7 @@ fun AuthContent(
 
         // Show error message if it exists
         error?.let {
-            Text(it, color = Color.Red, modifier = Modifier.padding(top = 16.dp))
+            Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 16.dp))
         }
 
         Spacer(Modifier.height(32.dp))

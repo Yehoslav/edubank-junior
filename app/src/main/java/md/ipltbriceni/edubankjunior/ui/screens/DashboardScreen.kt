@@ -24,11 +24,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import md.ipltbriceni.edubankjunior.R
 import md.ipltbriceni.edubankjunior.data.model.Ticket
 import md.ipltbriceni.edubankjunior.data.model.TicketsViewModel
 import md.ipltbriceni.edubankjunior.data.model.TicketProgress
+import md.ipltbriceni.edubankjunior.ui.theme.EduBankJuniorTheme
 import md.ipltbriceni.edubankjunior.ui.theme.EduHeroGradient
 
 @Composable
@@ -43,13 +46,6 @@ fun DashboardScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val ticketsWithProgress by viewModel.tickets.collectAsState()
     val showProgressDialog = remember { mutableStateOf(false) }
-
-    if (showProgressDialog.value) {
-        ProgressDialog(
-            ticketsWithProgress = ticketsWithProgress,
-            onDismiss = { showProgressDialog.value = false }
-        )
-    }
 
     // Listen for error events from the ViewModel
     LaunchedEffect(Unit) {
@@ -66,11 +62,41 @@ fun DashboardScreen(
         }
     }
 
+    DashboardContent(
+        isLoading = viewModel.isLoading,
+        ticketsWithProgress = ticketsWithProgress,
+        showProgressDialog = showProgressDialog.value,
+        onShowProgressChange = { showProgressDialog.value = it },
+        onStartTest = onStartTest,
+        onAllTicketsClick = onAllTicketsClick,
+        onQuickTestClick = onQuickTestClick,
+        onTicketClick = onTicketClick,
+        onLogout = onLogout
+    )
+}
+
+@Composable
+fun DashboardContent(
+    isLoading: Boolean,
+    ticketsWithProgress: List<Pair<Ticket, TicketProgress?>>,
+    showProgressDialog: Boolean,
+    onShowProgressChange: (Boolean) -> Unit,
+    onStartTest: (Int) -> Unit,
+    onAllTicketsClick: () -> Unit,
+    onQuickTestClick: (Int) -> Unit,
+    onTicketClick: (Int) -> Unit,
+    onLogout: () -> Unit
+) {
+    if (showProgressDialog) {
+        ProgressDialog(
+            ticketsWithProgress = ticketsWithProgress,
+            onDismiss = { onShowProgressChange(false) }
+        )
+    }
 
     Scaffold(
         topBar = { DashboardHeader(onLogout = onLogout) }
     ) { padding ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -79,8 +105,12 @@ fun DashboardScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            if (viewModel.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally).padding(top=20.dp))
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 20.dp)
+                )
             } else {
                 val tickets = ticketsWithProgress.map { it.first }
                 val completedCount = ticketsWithProgress.count { it.second != null }
@@ -90,24 +120,27 @@ fun DashboardScreen(
                 val nextTicketId = ticketsWithProgress.firstOrNull { it.second == null }?.first?.id 
                     ?: (if (tickets.isEmpty()) 0 else tickets.random().id)
 
-                HeroProgressCard(completedCount, totalCount, onStartClick = { onStartTest(nextTicketId) })
+                HeroProgressCard(
+                    completed = completedCount,
+                    total = totalCount,
+                    onStartClick = { onStartTest(nextTicketId) }
+                )
 
                 ActionButtonsRow(
                     onQuickTest = { onQuickTestClick(nextTicketId) },
                     onAllTickets = onAllTicketsClick,
-                    onShowProgress = { showProgressDialog.value = true }
+                    onShowProgress = { onShowProgressChange(true) }
                 )
 
                 val sortedTickets = ticketsWithProgress.sortedWith(
-                    compareBy<Pair<Ticket, TicketProgress?>> { it.second == null } // Unanswered first (false < true, wait)
-                        .reversed() // True (null) first
-                        .thenBy { it.second?.correct ?: 0 } // Then lowest score
+                    compareBy<Pair<Ticket, TicketProgress?>> { it.second == null }
+                        .reversed()
+                        .thenBy { it.second?.correct ?: 0 }
                 ).take(4)
 
                 NextTicketsSection(sortedTickets, onTicketClick)
             }
         }
-
     }
 }
 
@@ -117,7 +150,7 @@ fun DashboardHeader(modifier: Modifier = Modifier, onLogout: () -> Unit = {}) {
 
     Row(
         modifier = modifier
-            .statusBarsPadding() // Dynamically adds margin for the status bar/notch
+            .statusBarsPadding()
             .padding(horizontal = 18.dp, vertical = 12.dp)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -211,7 +244,7 @@ fun ActionButtonCard(
     ElevatedCard(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -236,7 +269,6 @@ fun ActionButtonCard(
     }
 }
 
-@Preview
 @Composable
 fun ActionButtonsRow(
     onQuickTest: () -> Unit = {},
@@ -371,5 +403,86 @@ fun NextTicketsSection(ticketsWithProgress: List<Pair<Ticket, TicketProgress?>>,
                 TicketCard(ticket, progress, onTicketClick)
             }
         }
+    }
+}
+
+// --- PREVIEWS ---
+
+class DashboardPreviewProvider : PreviewParameterProvider<List<Pair<Ticket, TicketProgress?>>> {
+    override val values = sequenceOf(
+        List(5) { i ->
+            Ticket(i, "Misiune de test $i") to if (i < 2) TicketProgress(8, 10) else null
+        }
+    )
+}
+
+@Preview(showBackground = true, name = "Dashboard Full")
+@Composable
+fun DashboardContentPreview(
+    @PreviewParameter(DashboardPreviewProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>
+) {
+    EduBankJuniorTheme(dynamicColor = false) {
+        DashboardContent(
+            isLoading = false,
+            ticketsWithProgress = tickets,
+            showProgressDialog = false,
+            onShowProgressChange = {},
+            onStartTest = {},
+            onAllTicketsClick = {},
+            onQuickTestClick = {},
+            onTicketClick = {},
+            onLogout = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Dashboard Loading")
+@Composable
+fun DashboardLoadingPreview() {
+    EduBankJuniorTheme(dynamicColor = false) {
+        DashboardContent(
+            isLoading = true,
+            ticketsWithProgress = emptyList(),
+            showProgressDialog = false,
+            onShowProgressChange = {},
+            onStartTest = {},
+            onAllTicketsClick = {},
+            onQuickTestClick = {},
+            onTicketClick = {},
+            onLogout = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Hero Card")
+@Composable
+fun HeroProgressCardPreview() {
+    EduBankJuniorTheme(dynamicColor = false) {
+        Box(modifier = Modifier.padding(16.dp)) {
+            HeroProgressCard(completed = 3, total = 10)
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Action Buttons")
+@Composable
+fun ActionButtonsRowPreview() {
+    EduBankJuniorTheme(dynamicColor = false) {
+        Box(modifier = Modifier.padding(16.dp)) {
+            ActionButtonsRow()
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Progress Dialog")
+@Composable
+fun ProgressDialogPreview(
+    @PreviewParameter(DashboardPreviewProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>
+) {
+    EduBankJuniorTheme(dynamicColor = false) {
+        ProgressDialog(
+            ticketsWithProgress = tickets,
+            onDismiss = {}
+        )
     }
 }

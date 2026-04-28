@@ -15,8 +15,14 @@ private val DarkColorScheme = darkColorScheme(
     primary = EduPrimary,
     onPrimary = Color.White,
     primaryContainer = EduPrimaryDark,
-    background = EduBackground,
-    surface = EduSurface,
+    background = DarkEduBackground,
+    surface = DarkEduSurface,
+    tertiary = EduSuccess,
+    tertiaryContainer = EduSuccessContainer,
+    onTertiaryContainer = EduOnSuccessContainer,
+    error = EduError,
+    errorContainer = EduErrorContainer,
+    onErrorContainer = EduOnErrorContainer
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -28,6 +34,12 @@ private val LightColorScheme = lightColorScheme(
     surfaceContainer = Color.White,
     onSurface = EduTextMain,
     onSurfaceVariant = EduTextMuted,
+    tertiary = EduSuccess,
+    tertiaryContainer = EduSuccessContainer,
+    onTertiaryContainer = EduOnSuccessContainer,
+    error = EduError,
+    errorContainer = EduErrorContainer,
+    onErrorContainer = EduOnErrorContainer
 )
 
 

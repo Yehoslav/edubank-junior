@@ -37,7 +37,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,6 +47,7 @@ import md.ipltbriceni.edubankjunior.R
 import md.ipltbriceni.edubankjunior.data.model.TicketsViewModel
 import md.ipltbriceni.edubankjunior.data.model.Ticket
 import md.ipltbriceni.edubankjunior.data.model.TicketProgress
+import md.ipltbriceni.edubankjunior.ui.theme.EduBankJuniorTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -124,8 +124,17 @@ class TicketProvider : PreviewParameterProvider<List<Pair<Ticket, TicketProgress
 
 @Preview(showBackground = true)
 @Composable
+fun TicketListPreview(
+    @PreviewParameter(TicketProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>
+) {
+    EduBankJuniorTheme(dynamicColor = false) {
+        TicketList(tickets = tickets)
+    }
+}
+
+@Composable
 fun TicketList(
-    @PreviewParameter(TicketProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>,
+    tickets: List<Pair<Ticket, TicketProgress?>>,
     onTicketClick: (Int) -> Unit = {},
 ) {
     LazyColumn(
@@ -144,8 +153,8 @@ fun TicketList(
 @Composable
 fun TicketCard(ticket: Ticket, progress: TicketProgress?, onTicketClick: (Int) -> Unit) {
     val isCompleted = progress != null
-    val containerColor = if (isCompleted) Color(0xFFE8F5E9) else Color.White
-    val iconColor = if (isCompleted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
+    val containerColor = if (isCompleted) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surface
+    val iconColor = if (isCompleted) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
 
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -177,7 +186,7 @@ fun TicketCard(ticket: Ticket, progress: TicketProgress?, onTicketClick: (Int) -
                         Text(
                             text = "Scor: ${progress.correct}/${progress.total}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF2E7D32),
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
                             fontWeight = FontWeight.SemiBold
                         )
                     }

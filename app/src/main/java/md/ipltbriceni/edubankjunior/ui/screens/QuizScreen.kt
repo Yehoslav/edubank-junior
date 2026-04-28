@@ -130,13 +130,13 @@ fun QuizContent(questions: List<Question>, viewModel: QuizViewModel) {
         
         val (containerColor, contentColor) = when {
             !viewModel.showFeedback -> {
-                Color.White to MaterialTheme.colorScheme.onSurface
+                MaterialTheme.colorScheme.surface to MaterialTheme.colorScheme.onSurface
             }
             isCorrect -> {
-                Color(0xFFE8F5E9) to Color(0xFF2E7D32) // Pleasant Green
+                MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
             }
             isSelected -> {
-                Color(0xFFFFEBEE) to Color(0xFFC62828) // Pleasant Red
+                MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
             }
             else -> {
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) to MaterialTheme.colorScheme.onSurfaceVariant
