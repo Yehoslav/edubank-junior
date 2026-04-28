@@ -32,7 +32,7 @@ import md.ipltbriceni.edubankjunior.data.model.Ticket
 import md.ipltbriceni.edubankjunior.data.model.TicketsViewModel
 import md.ipltbriceni.edubankjunior.data.model.TicketProgress
 import md.ipltbriceni.edubankjunior.ui.theme.EduBankJuniorTheme
-import md.ipltbriceni.edubankjunior.ui.theme.EduHeroGradient
+import androidx.compose.ui.graphics.Brush
 
 @Composable
 fun DashboardScreen(
@@ -196,6 +196,9 @@ fun DashboardHeader(modifier: Modifier = Modifier, onLogout: () -> Unit = {}) {
 
 @Composable
 fun HeroProgressCard(completed: Int, total: Int, onStartClick: () -> Unit = {}) {
+    val heroGradient = Brush.horizontalGradient(
+        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer)
+    )
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -204,7 +207,7 @@ fun HeroProgressCard(completed: Int, total: Int, onStartClick: () -> Unit = {}) 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(EduHeroGradient)
+                .background(heroGradient)
                 .padding(24.dp)
         ) {
             Column {
