@@ -18,17 +18,24 @@ class QuizRepository(
     private val db: FirebaseFirestore
 ) {
 
-    fun getTickets(onSuccess: (List<Ticket>) -> Unit, onFailure: (Exception) -> Unit) {
-        db.collection("tickets")
+
+    fun getTickets(): Flow<Result<List<Ticket>>> = callbackFlow {
+        // Se folosește callbackFlow pentru a ține interfața sincronizată cu baza de date.
+        // Adică la schimbarea valorilor în Firebase interfața se va împrospăta automat.
+        val subscription = db.collection("tickets")
             .orderBy("id")
-            .get()
-            .addOnSuccessListener { result ->
-                val tickets = result.toObjects(Ticket::class.java)
-                onSuccess(tickets)
+            .addSnapshotListener { snapshot, error ->
+                // addSnapshotListener ia ca parametru o funcție care va fi chemată de fiecare dată
+                // cînd au loc modificări pe Firebase. Ea nu are return, ci trimite datele către
+                // ca rezultat a funcției getTickets. Trimiterea se face prin trySend
+                if (error != null) {
+                    trySend(Result.failure(error))
+                    return@addSnapshotListener
+                }
+                val tickets = snapshot?.toObjects(Ticket::class.java) ?: emptyList()
+                trySend(Result.success(tickets))
             }
-            .addOnFailureListener { exception ->
-                onFailure(exception)
-            }
+        awaitClose { subscription.remove() }
     }
 
     fun getQuestionsForTicket(ticketId: Int): Flow<Result<List<Question>>> = callbackFlow {
