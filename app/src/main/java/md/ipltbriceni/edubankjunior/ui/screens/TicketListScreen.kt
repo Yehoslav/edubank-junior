@@ -48,14 +48,13 @@ import md.ipltbriceni.edubankjunior.data.model.TicketsViewModel
 import md.ipltbriceni.edubankjunior.data.model.Ticket
 import md.ipltbriceni.edubankjunior.data.model.TicketProgress
 import md.ipltbriceni.edubankjunior.ui.theme.EduBankJuniorTheme
+import kotlin.Pair
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TicketListScreen(viewModel: TicketsViewModel, onTicketClick: (Int) -> Unit, onNavigateBack: () -> Unit) {
-    val snackbarHostState = remember { SnackbarHostState() }
     val ticketsWithProgress by viewModel.tickets.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    // Listen for error events from the ViewModel
     LaunchedEffect(Unit) {
         viewModel.errorEvents.collect { message ->
             val result = snackbarHostState.showSnackbar(
@@ -70,6 +69,24 @@ fun TicketListScreen(viewModel: TicketsViewModel, onTicketClick: (Int) -> Unit, 
         }
     }
 
+    TicketListContent(
+        snackbarHostState,
+        viewModel.isLoading,
+        ticketsWithProgress,
+        onTicketClick = onTicketClick,
+        onNavigateBack = onNavigateBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TicketListContent(
+    snackbarHostState: SnackbarHostState,
+    isLoading: Boolean,
+    ticketsWithProgress: List<Pair<Ticket, TicketProgress?>>,
+    onTicketClick: (Int) -> Unit,
+    onNavigateBack: () -> Unit,
+) {
     Scaffold(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState) { data ->
@@ -104,31 +121,12 @@ fun TicketListScreen(viewModel: TicketsViewModel, onTicketClick: (Int) -> Unit, 
             modifier = Modifier.fillMaxSize().padding(padding),
             contentAlignment = Alignment.Center
         ) {
-            if (viewModel.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else {
-                TicketList(ticketsWithProgress, onTicketClick)
+            when {
+                isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                !ticketsWithProgress.isEmpty() -> TicketList(ticketsWithProgress, onTicketClick)
+                else -> Text("Nu există bilete de studiu", modifier = Modifier.align(Alignment.Center))
             }
         }
-    }
-}
-
-class TicketProvider : PreviewParameterProvider<List<Pair<Ticket, TicketProgress?>>> {
-    override val values = sequenceOf(
-        emptyList(), // Test empty state
-        List(5) { 
-            Ticket(it, "Bilet Repetat $it") to if (it % 2 == 0) TicketProgress(8, 10) else null
-        } 
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TicketListPreview(
-    @PreviewParameter(TicketProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>
-) {
-    EduBankJuniorTheme(dynamicColor = false) {
-        TicketList(tickets = tickets)
     }
 }
 
@@ -198,5 +196,52 @@ fun TicketCard(ticket: Ticket, progress: TicketProgress?, onTicketClick: (Int) -
                 )
             }
         }
+    }
+}
+
+data class TicketPreviewState(
+    val isLoading: Boolean,
+    val tickets: List<Pair<Ticket, TicketProgress?>>
+)
+
+class TicketProvider : PreviewParameterProvider<TicketPreviewState> {
+    override val values = sequenceOf(
+        TicketPreviewState(true,emptyList()), // Test empty state
+        TicketPreviewState(false,emptyList()), // Test empty state
+        TicketPreviewState(false,
+        List(5) {
+            Ticket(it, "Bilet Repetat $it") to if (it % 2 == 0) TicketProgress(8, 10) else null
+        })
+    )
+}
+
+@Preview(showBackground = true, name = "Tickets list Screen: Light")
+@Composable
+fun TicketListContentDarkPreview(
+    @PreviewParameter(TicketProvider::class) state: TicketPreviewState
+) {
+    EduBankJuniorTheme(darkTheme = true) {
+        TicketListContent(
+            snackbarHostState = remember { SnackbarHostState() },
+            isLoading = state.isLoading,
+            ticketsWithProgress = state.tickets,
+            onTicketClick = {},
+            onNavigateBack = {},
+        )
+    }
+}
+@Preview(showBackground = true, name = "Tickets list Screen: Light")
+@Composable
+fun TicketListContentPreview(
+    @PreviewParameter(TicketProvider::class) state: TicketPreviewState
+) {
+    EduBankJuniorTheme {
+        TicketListContent(
+            snackbarHostState = remember { SnackbarHostState() },
+            isLoading = state.isLoading,
+            ticketsWithProgress = state.tickets,
+            onTicketClick = {},
+            onNavigateBack = {},
+        )
     }
 }

@@ -112,7 +112,7 @@ fun AuthContent(
 @Preview(showBackground = true)
 @Composable
 fun AuthContentPreview() {
-    EduBankJuniorTheme(dynamicColor = false) {
+    EduBankJuniorTheme {
         AuthContent(
             isLoading = false,
             error = null,
@@ -124,7 +124,7 @@ fun AuthContentPreview() {
 @Preview(showBackground = true)
 @Composable
 fun AuthContentLoadingPreview() {
-    EduBankJuniorTheme(dynamicColor = false) {
+    EduBankJuniorTheme {
         AuthContent(
             isLoading = true,
             error = null,
@@ -136,10 +136,10 @@ fun AuthContentLoadingPreview() {
 @Preview(showBackground = true)
 @Composable
 fun AuthContentErrorPreview() {
-    EduBankJuniorTheme(dynamicColor = false) {
+    EduBankJuniorTheme {
         AuthContent(
             isLoading = false,
-            error = "Invalid email or password",
+            error = "E-mail sau parolă greșită",
             onAuthClick = { _, _, _ -> }
         )
     }

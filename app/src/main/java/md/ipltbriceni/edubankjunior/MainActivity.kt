@@ -33,10 +33,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val repository = remember { QuizRepository(auth, db) }
-            val ticketsViewModel = remember { TicketsViewModel(repository) }
 
-            EduBankJuniorTheme(dynamicColor = false) {
+            EduBankJuniorTheme {
                 val navController = rememberNavController()
+                val ticketsViewModel = remember { TicketsViewModel(repository) }
 
                 NavHost(
                     navController = navController,
@@ -45,13 +45,11 @@ class MainActivity : ComponentActivity() {
                     composable("auth") {
                         val authViewModel = remember { AuthViewModel(repository) }
                         AuthScreen(authViewModel, onAuthSuccess = {
-
                             navController.navigate("dashboard") {
                                 popUpTo("dashboard") { inclusive = true }
                             }
                         })
                     }
-
 
                     composable("dashboard/tickets") {
                         TicketListScreen(
@@ -70,10 +68,8 @@ class MainActivity : ComponentActivity() {
                     composable("dashboard") {
                         DashboardScreen(
                             viewModel = ticketsViewModel,
-                            onStartTest = { ticketId -> navController.navigate("quiz/$ticketId") },
                             onAllTicketsClick = { navController.navigate("dashboard/tickets") },
-                            onQuickTestClick = { ticketId -> navController.navigate("quiz/$ticketId") },
-                            onTicketClick = { ticketId -> navController.navigate("quiz/$ticketId") },
+                            onTicketSelected = { ticketId -> navController.navigate("quiz/$ticketId") },
                             onLogout = {
                                 repository.signOut()
                                 navController.navigate("auth") {
@@ -90,7 +86,7 @@ class MainActivity : ComponentActivity() {
                         val ticketId = backStackEntry.arguments?.getInt("ticketId") ?: 0
                         val quizViewModel = remember { QuizViewModel(repository) }
                         quizViewModel.loadQuestions(ticketId)
-                        QuizScreen(ticketId = ticketId, quizViewModel, {
+                        QuizScreen(ticketId = ticketId, quizViewModel, onNavigateBack = {
                             navController.navigate("dashboard") {
                                 popUpTo("dashboard") { inclusive = true }
                             }

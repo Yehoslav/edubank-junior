@@ -37,10 +37,8 @@ import androidx.compose.ui.graphics.Brush
 @Composable
 fun DashboardScreen(
     viewModel: TicketsViewModel,
-    onStartTest: (Int) -> Unit,
     onAllTicketsClick: () -> Unit,
-    onQuickTestClick: (Int) -> Unit,
-    onTicketClick: (Int) -> Unit,
+    onTicketSelected: (Int) -> Unit,
     onLogout: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -67,10 +65,8 @@ fun DashboardScreen(
         ticketsWithProgress = ticketsWithProgress,
         showProgressDialog = showProgressDialog.value,
         onShowProgressChange = { showProgressDialog.value = it },
-        onStartTest = onStartTest,
         onAllTicketsClick = onAllTicketsClick,
-        onQuickTestClick = onQuickTestClick,
-        onTicketClick = onTicketClick,
+        onTicketSelected = onTicketSelected,
         onLogout = onLogout
     )
 }
@@ -81,10 +77,8 @@ fun DashboardContent(
     ticketsWithProgress: List<Pair<Ticket, TicketProgress?>>,
     showProgressDialog: Boolean,
     onShowProgressChange: (Boolean) -> Unit,
-    onStartTest: (Int) -> Unit,
     onAllTicketsClick: () -> Unit,
-    onQuickTestClick: (Int) -> Unit,
-    onTicketClick: (Int) -> Unit,
+    onTicketSelected: (Int) -> Unit,
     onLogout: () -> Unit
 ) {
     if (showProgressDialog) {
@@ -123,11 +117,11 @@ fun DashboardContent(
                 HeroProgressCard(
                     completed = completedCount,
                     total = totalCount,
-                    onStartClick = { onStartTest(nextTicketId) }
+                    onStartClick = { onTicketSelected(nextTicketId) }
                 )
 
                 ActionButtonsRow(
-                    onQuickTest = { onQuickTestClick(nextTicketId) },
+                    onQuickTest = { onTicketSelected(nextTicketId) },
                     onAllTickets = onAllTicketsClick,
                     onShowProgress = { onShowProgressChange(true) }
                 )
@@ -138,7 +132,7 @@ fun DashboardContent(
                         .thenBy { it.second?.correct ?: 0 }
                 ).take(4)
 
-                NextTicketsSection(sortedTickets, onTicketClick)
+                NextTicketsSection(sortedTickets, onTicketSelected)
             }
         }
     }
@@ -419,21 +413,37 @@ class DashboardPreviewProvider : PreviewParameterProvider<List<Pair<Ticket, Tick
     )
 }
 
-@Preview(showBackground = true, name = "Dashboard Full")
+@Preview(showBackground = true, name = "Dashboard Full, Dark")
 @Composable
-fun DashboardContentPreview(
+fun DashboardContentDarkPreview(
     @PreviewParameter(DashboardPreviewProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>
 ) {
-    EduBankJuniorTheme(dynamicColor = false) {
+    EduBankJuniorTheme(darkTheme = true) {
         DashboardContent(
             isLoading = false,
             ticketsWithProgress = tickets,
             showProgressDialog = false,
             onShowProgressChange = {},
-            onStartTest = {},
             onAllTicketsClick = {},
-            onQuickTestClick = {},
-            onTicketClick = {},
+            onTicketSelected = {},
+            onLogout = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Dashboard Full")
+@Composable
+fun DashboardContentPreview(
+    @PreviewParameter(DashboardPreviewProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>
+) {
+    EduBankJuniorTheme {
+        DashboardContent(
+            isLoading = false,
+            ticketsWithProgress = tickets,
+            showProgressDialog = false,
+            onShowProgressChange = {},
+            onAllTicketsClick = {},
+            onTicketSelected = {},
             onLogout = {}
         )
     }
@@ -442,16 +452,14 @@ fun DashboardContentPreview(
 @Preview(showBackground = true, name = "Dashboard Loading")
 @Composable
 fun DashboardLoadingPreview() {
-    EduBankJuniorTheme(dynamicColor = false) {
+    EduBankJuniorTheme {
         DashboardContent(
             isLoading = true,
             ticketsWithProgress = emptyList(),
             showProgressDialog = false,
             onShowProgressChange = {},
-            onStartTest = {},
+            onTicketSelected = {},
             onAllTicketsClick = {},
-            onQuickTestClick = {},
-            onTicketClick = {},
             onLogout = {}
         )
     }
@@ -460,7 +468,7 @@ fun DashboardLoadingPreview() {
 @Preview(showBackground = true, name = "Hero Card")
 @Composable
 fun HeroProgressCardPreview() {
-    EduBankJuniorTheme(dynamicColor = false) {
+    EduBankJuniorTheme {
         Box(modifier = Modifier.padding(16.dp)) {
             HeroProgressCard(completed = 3, total = 10)
         }
@@ -470,7 +478,7 @@ fun HeroProgressCardPreview() {
 @Preview(showBackground = true, name = "Action Buttons")
 @Composable
 fun ActionButtonsRowPreview() {
-    EduBankJuniorTheme(dynamicColor = false) {
+    EduBankJuniorTheme {
         Box(modifier = Modifier.padding(16.dp)) {
             ActionButtonsRow()
         }
@@ -482,7 +490,7 @@ fun ActionButtonsRowPreview() {
 fun ProgressDialogPreview(
     @PreviewParameter(DashboardPreviewProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>
 ) {
-    EduBankJuniorTheme(dynamicColor = false) {
+    EduBankJuniorTheme {
         ProgressDialog(
             ticketsWithProgress = tickets,
             onDismiss = {}

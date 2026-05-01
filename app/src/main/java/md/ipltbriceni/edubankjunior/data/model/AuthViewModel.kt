@@ -36,8 +36,4 @@ class AuthViewModel(private val repository: QuizRepository) : ViewModel() {
             }
         }
     }
-
-    fun logout() {
-        repository.signOut()
-    }
 }

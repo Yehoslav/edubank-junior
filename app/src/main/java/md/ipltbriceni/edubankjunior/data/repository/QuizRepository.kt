@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.channels.awaitClose
 
-import androidx.compose.runtime.staticCompositionLocalOf
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -18,6 +17,7 @@ class QuizRepository(
     private val auth: FirebaseAuth,
     private val db: FirebaseFirestore
 ) {
+
     fun getTickets(onSuccess: (List<Ticket>) -> Unit, onFailure: (Exception) -> Unit) {
         db.collection("tickets")
             .orderBy("id")
@@ -39,28 +39,22 @@ class QuizRepository(
                     trySend(Result.failure(error))
                     return@addSnapshotListener
                 }
-
                 val questions = snapshot?.mapNotNull { doc ->
                     doc.toObject(Question::class.java)
                 } ?: emptyList()
-
                 trySend(Result.success(questions))
             }
-        
-        // Clean up the listener when the flow is closed
         awaitClose { subscription.remove() }
     }
 
-    // --- Authentication Logic ---
-
+    // --- Autenticare ---
     suspend fun signUp(email: String, pass: String) {
         val result = auth.createUserWithEmailAndPassword(email, pass).await()
         val uid = result.user?.uid ?: return
         val initialProfile = mapOf(
             "email" to email,
             "totalScore" to 0,
-            "progress" to emptyMap<String, Int>(),
-            "role" to "student"
+            "progress" to emptyMap<String, TicketProgress>(),
         )
         db.collection("users").document(uid).set(initialProfile).await()
     }
@@ -73,8 +67,7 @@ class QuizRepository(
         auth.signOut()
     }
 
-    // --- Progress Logic ---
-
+    // --- Scor ---
     fun getUserProgress(): Flow<Map<String, TicketProgress>> = callbackFlow {
         val uid = auth.currentUser?.uid ?: run {
             trySend(emptyMap())
@@ -88,24 +81,26 @@ class QuizRepository(
                     return@addSnapshotListener
                 }
 
-                val progressMap = snapshot?.get("progress") as? Map<String, Map<String, Any>>
-                val result = progressMap?.mapValues { (_, value) ->
-                    TicketProgress(
-                        correct = (value["correct"] as? Long)?.toInt() ?: 0,
-                        total = (value["total"] as? Long)?.toInt() ?: 0
-                    )
-                } ?: emptyMap()
-
+                val progressMap = snapshot?.get("progress") as? Map<*, *>
+                val result = progressMap?.entries?.mapNotNull { entry ->
+                    val key = entry.key as? String
+                    val value = entry.value as? Map<*, *>
+                    if (key != null && value != null) {
+                        key to TicketProgress(
+                            correct = (value["correct"] as? Long)?.toInt() ?: 0,
+                            total = (value["total"] as? Long)?.toInt() ?: 0
+                        )
+                    } else {
+                        null
+                    }
+                }?.toMap() ?: emptyMap()
                 trySend(result)
             }
-
         awaitClose { subscription.remove() }
     }
 
     suspend fun saveTicketScore(ticketId: Int, correct: Int, total: Int) {
         val uid = auth.currentUser?.uid ?: throw Exception("User not logged in")
-
-        // Storing as a nested object: progress -> ticketId -> {correct, total}
         val updates = mapOf(
             "progress.$ticketId.correct" to correct,
             "progress.$ticketId.total" to total,

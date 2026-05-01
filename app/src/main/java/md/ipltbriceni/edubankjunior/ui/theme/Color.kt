@@ -29,7 +29,7 @@ val md_theme_light_surfaceVariant = Color(0xFFE0E0E0)
 val md_theme_light_onSurfaceVariant = Color(0xFF7A7A7A)
 
 // Dark Theme Palette
-val md_theme_dark_primary = Color(0xFF5ED4C7) // Lighter version of 169d91 for dark theme
+val md_theme_dark_primary = Color(0xFF169d91)
 val md_theme_dark_onPrimary = Color(0xFF003733)
 val md_theme_dark_primaryContainer = Color(0xFF00504B)
 val md_theme_dark_onPrimaryContainer = Color(0xFF7EF1E3)
