@@ -66,6 +66,7 @@ fun DashboardScreen(
         isLoading = viewModel.isLoading,
         ticketsWithProgress = ticketsWithProgress,
         showProgressDialog = showProgressDialog.value,
+        snackbarHostState = snackbarHostState,
         onShowProgressChange = { showProgressDialog.value = it },
         onStartTest = onStartTest,
         onAllTicketsClick = onAllTicketsClick,
@@ -80,6 +81,7 @@ fun DashboardContent(
     isLoading: Boolean,
     ticketsWithProgress: List<Pair<Ticket, TicketProgress?>>,
     showProgressDialog: Boolean,
+    snackbarHostState: SnackbarHostState,
     onShowProgressChange: (Boolean) -> Unit,
     onStartTest: (Int) -> Unit,
     onAllTicketsClick: () -> Unit,
@@ -95,7 +97,8 @@ fun DashboardContent(
     }
 
     Scaffold(
-        topBar = { DashboardHeader(onLogout = onLogout) }
+        topBar = { DashboardHeader(onLogout = onLogout) },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -429,6 +432,7 @@ fun DashboardContentPreview(
             isLoading = false,
             ticketsWithProgress = tickets,
             showProgressDialog = false,
+            snackbarHostState = remember { SnackbarHostState() },
             onShowProgressChange = {},
             onStartTest = {},
             onAllTicketsClick = {},
@@ -449,6 +453,7 @@ fun DashboardContentDarkPreview(
             isLoading = false,
             ticketsWithProgress = tickets,
             showProgressDialog = false,
+            snackbarHostState = remember { SnackbarHostState() },
             onShowProgressChange = {},
             onStartTest = {},
             onAllTicketsClick = {},
@@ -467,6 +472,7 @@ fun DashboardLoadingPreview() {
             isLoading = true,
             ticketsWithProgress = emptyList(),
             showProgressDialog = false,
+            snackbarHostState = remember { SnackbarHostState() },
             onShowProgressChange = {},
             onStartTest = {},
             onAllTicketsClick = {},

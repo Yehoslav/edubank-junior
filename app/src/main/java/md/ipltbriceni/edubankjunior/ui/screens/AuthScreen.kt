@@ -12,6 +12,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,16 +44,22 @@ fun AuthScreen(
         }
     }
 
-    AuthContent(
-        isLoading = viewModel.isLoading,
-        onAuthClick = { isLogin, email, password ->
-            viewModel.performAuth(isLogin, email, password, onAuthSuccess)
-        }
-    )
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
+        AuthContent(
+            modifier = Modifier.padding(innerPadding),
+            isLoading = viewModel.isLoading,
+            onAuthClick = { isLogin, email, password ->
+                viewModel.performAuth(isLogin, email, password, onAuthSuccess)
+            }
+        )
+    }
 }
 
 @Composable
 fun AuthContent(
+    modifier: Modifier = Modifier,
     isLoading: Boolean,
     onAuthClick: (isLogin: Boolean, email: String, password: String) -> Unit
 ) {
@@ -60,7 +68,7 @@ fun AuthContent(
     var password by remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

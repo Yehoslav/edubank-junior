@@ -27,11 +27,13 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -72,6 +74,7 @@ fun TicketListScreen(
     TicketListContent(
         isLoading = viewModel.isLoading,
         ticketsWithProgress = ticketsWithProgress,
+        snackbarHostState = snackbarHostState,
         onTicketClick = onTicketClick,
         onNavigateBack = onNavigateBack
     )
@@ -82,6 +85,7 @@ fun TicketListScreen(
 fun TicketListContent(
     isLoading: Boolean,
     ticketsWithProgress: List<Pair<Ticket, TicketProgress?>>,
+    snackbarHostState: SnackbarHostState,
     onTicketClick: (Int) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -104,12 +108,14 @@ fun TicketListContent(
                     containerColor = MaterialTheme.colorScheme.background,
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(padding)
+            ,
             contentAlignment = Alignment.Center
         ) {
             when {
@@ -225,6 +231,7 @@ fun TicketListLoadingPreview() {
         TicketListContent(
             isLoading = true,
             ticketsWithProgress = emptyList(),
+            snackbarHostState = remember { SnackbarHostState() },
             onTicketClick = {},
             onNavigateBack = {}
         )
@@ -238,6 +245,7 @@ fun TicketListEmptyPreview() {
         TicketListContent(
             isLoading = false,
             ticketsWithProgress = emptyList(),
+            snackbarHostState = remember { SnackbarHostState() },
             onTicketClick = {},
             onNavigateBack = {}
         )
@@ -253,6 +261,7 @@ fun TicketListLightPreview(
         TicketListContent(
             isLoading = false,
             ticketsWithProgress = tickets,
+            snackbarHostState = remember { SnackbarHostState() },
             onTicketClick = {},
             onNavigateBack = {}
         )
@@ -268,6 +277,7 @@ fun TicketListDarkPreview(
         TicketListContent(
             isLoading = false,
             ticketsWithProgress = tickets,
+            snackbarHostState = remember { SnackbarHostState() },
             onTicketClick = {},
             onNavigateBack = {}
         )

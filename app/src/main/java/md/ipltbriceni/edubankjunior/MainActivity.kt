@@ -4,14 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -46,72 +40,63 @@ class MainActivity : ComponentActivity() {
                 val ticketsViewModel = remember { TicketsViewModel(repository) }
                 val snackbarHostState = remember { SnackbarHostState() }
 
-                Scaffold(
-                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-                ) { innerPadding ->
-                    Surface(
-                        modifier = Modifier.padding(innerPadding),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        NavHost(
-                            navController = navController,
-                            startDestination = if (auth.currentUser == null) "auth" else "dashboard"
-                        ) {
-                            composable("auth") {
-                                val authViewModel = remember { AuthViewModel(repository) }
-                                AuthScreen(
-                                    authViewModel,
-                                    snackbarHostState = snackbarHostState,
-                                    onAuthSuccess = {
-                                        navController.navigate("dashboard") {
-                                            popUpTo("auth") { inclusive = true }
-                                        }
-                                    }
-                                )
+                NavHost(
+                    navController = navController,
+                    startDestination = if (auth.currentUser == null) "auth" else "dashboard"
+                ) {
+                    composable("auth") {
+                        val authViewModel = remember { AuthViewModel(repository) }
+                        AuthScreen(
+                            authViewModel,
+                            snackbarHostState = snackbarHostState,
+                            onAuthSuccess = {
+                                navController.navigate("dashboard") {
+                                    popUpTo("auth") { inclusive = true }
+                                }
                             }
+                        )
+                    }
 
-                            composable("dashboard/tickets") {
-                                TicketListScreen(
-                                    ticketsViewModel,
-                                    snackbarHostState = snackbarHostState,
-                                    onTicketClick = { ticketId ->
-                                        navController.navigate("quiz/$ticketId")
-                                    },
-                                    onNavigateBack = {
-                                        navController.popBackStack()
-                                    }
-                                )
+                    composable("dashboard/tickets") {
+                        TicketListScreen(
+                            ticketsViewModel,
+                            snackbarHostState = snackbarHostState,
+                            onTicketClick = { ticketId ->
+                                navController.navigate("quiz/$ticketId")
+                            },
+                            onNavigateBack = {
+                                navController.popBackStack()
                             }
+                        )
+                    }
 
-                            composable("dashboard") {
-                                DashboardScreen(
-                                    viewModel = ticketsViewModel,
-                                    snackbarHostState = snackbarHostState,
-                                    onStartTest = { ticketId -> navController.navigate("quiz/$ticketId") },
-                                    onAllTicketsClick = { navController.navigate("dashboard/tickets") },
-                                    onQuickTestClick = { ticketId -> navController.navigate("quiz/$ticketId") },
-                                    onTicketClick = { ticketId -> navController.navigate("quiz/$ticketId") },
-                                    onLogout = {
-                                        repository.signOut()
-                                        navController.navigate("auth") {
-                                            popUpTo("dashboard") { inclusive = true }
-                                        }
-                                    }
-                                )
+                    composable("dashboard") {
+                        DashboardScreen(
+                            viewModel = ticketsViewModel,
+                            snackbarHostState = snackbarHostState,
+                            onStartTest = { ticketId -> navController.navigate("quiz/$ticketId") },
+                            onAllTicketsClick = { navController.navigate("dashboard/tickets") },
+                            onQuickTestClick = { ticketId -> navController.navigate("quiz/$ticketId") },
+                            onTicketClick = { ticketId -> navController.navigate("quiz/$ticketId") },
+                            onLogout = {
+                                repository.signOut()
+                                navController.navigate("auth") {
+                                    popUpTo("dashboard") { inclusive = true }
+                                }
                             }
+                        )
+                    }
 
-                            composable(
-                                route = "quiz/{ticketId}",
-                                arguments = listOf(navArgument("ticketId") { type = NavType.IntType })
-                            ) { backStackEntry ->
-                                val ticketId = backStackEntry.arguments?.getInt("ticketId") ?: 0
-                                val quizViewModel = remember { QuizViewModel(repository) }
-                                quizViewModel.loadQuestions(ticketId)
-                                QuizScreen(ticketId = ticketId, viewModel = quizViewModel, onNavigateBack = {
-                                    navController.popBackStack()
-                                })
-                            }
-                        }
+                    composable(
+                        route = "quiz/{ticketId}",
+                        arguments = listOf(navArgument("ticketId") { type = NavType.IntType })
+                    ) { backStackEntry ->
+                        val ticketId = backStackEntry.arguments?.getInt("ticketId") ?: 0
+                        val quizViewModel = remember { QuizViewModel(repository) }
+                        quizViewModel.loadQuestions(ticketId)
+                        QuizScreen(ticketId = ticketId, viewModel = quizViewModel, onNavigateBack = {
+                            navController.popBackStack()
+                        })
                     }
                 }
             }

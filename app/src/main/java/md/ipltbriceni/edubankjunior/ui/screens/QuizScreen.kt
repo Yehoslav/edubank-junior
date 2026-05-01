@@ -20,9 +20,13 @@ import md.ipltbriceni.edubankjunior.data.model.Question
 import md.ipltbriceni.edubankjunior.data.model.QuizUiState
 import md.ipltbriceni.edubankjunior.data.model.QuizViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QuizScreen(ticketId: Int, viewModel: QuizViewModel, onNavigateBack: () -> Unit = {}) {
+fun QuizScreen(
+    ticketId: Int,
+    viewModel: QuizViewModel,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    onNavigateBack: () -> Unit = {}
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     QuizScreenContent(
@@ -33,6 +37,7 @@ fun QuizScreen(ticketId: Int, viewModel: QuizViewModel, onNavigateBack: () -> Un
         currentQuestionIndex = viewModel.currentQuestionIndex,
         selectedOptionIndex = viewModel.selectedOptionIndex,
         showFeedback = viewModel.showFeedback,
+        snackbarHostState = snackbarHostState,
         onAnswerClick = { index, questions -> viewModel.checkAnswer(index, questions) },
         onFinishQuiz = { tId, s, total -> viewModel.finishQuiz(tId, s, total, onComplete = {}) },
         onNavigateBack = onNavigateBack
@@ -49,6 +54,7 @@ private fun QuizScreenContent(
     currentQuestionIndex: Int,
     selectedOptionIndex: Int?,
     showFeedback: Boolean,
+    snackbarHostState: SnackbarHostState,
     onAnswerClick: (Int, List<Question>) -> Unit,
     onFinishQuiz: (Int, Int, Int) -> Unit,
     onNavigateBack: () -> Unit
@@ -56,57 +62,39 @@ private fun QuizScreenContent(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text("Misiunea $ticketId", style = MaterialTheme.typography.titleLarge)
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_arrow_back),
-                            contentDescription = "Înapoi",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                )
-            )
-        }
+            QuizTopAppBar(ticketId = ticketId, onNavigateBack = onNavigateBack)
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding)) {
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.Center
-            ) {
-                when (uiState) {
-                    is QuizUiState.Error -> Text(uiState.message)
-                    is QuizUiState.Loading -> CircularProgressIndicator()
-                    is QuizUiState.Success -> {
-                        if (isMissionComplete) {
-                            onFinishQuiz(
-                                ticketId,
-                                score,
-                                uiState.questions.size
-                            )
-                            MissionSummary(
-                                score = score,
-                                total = uiState.questions.size,
-                                onExit = onNavigateBack
-                            )
-                        } else {
-                            QuizContent(
-                                questions = uiState.questions,
-                                currentQuestionIndex = currentQuestionIndex,
-                                selectedOptionIndex = selectedOptionIndex,
-                                showFeedback = showFeedback,
-                                onAnswerClick = onAnswerClick
-                            )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            when (uiState) {
+                is QuizUiState.Error -> Text(uiState.message, color = MaterialTheme.colorScheme.error)
+                is QuizUiState.Loading -> CircularProgressIndicator()
+                is QuizUiState.Success -> {
+                    if (isMissionComplete) {
+                        LaunchedEffect(Unit) {
+                            onFinishQuiz(ticketId, score, uiState.questions.size)
                         }
+                        MissionSummary(
+                            score = score,
+                            total = uiState.questions.size,
+                            onExit = onNavigateBack
+                        )
+                    } else {
+                        QuizContent(
+                            questions = uiState.questions,
+                            currentQuestionIndex = currentQuestionIndex,
+                            selectedOptionIndex = selectedOptionIndex,
+                            showFeedback = showFeedback,
+                            onAnswerClick = { index -> onAnswerClick(index, uiState.questions) }
+                        )
                     }
                 }
             }
@@ -114,10 +102,31 @@ private fun QuizScreenContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MissionSummary(score: Int, total: Int, onExit: () -> Unit) {
+private fun QuizTopAppBar(ticketId: Int, onNavigateBack: () -> Unit) {
+    CenterAlignedTopAppBar(
+        title = {
+            Text("Biletul $ticketId", style = MaterialTheme.typography.titleLarge)
+        },
+        navigationIcon = {
+            IconButton(onClick = onNavigateBack) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_arrow_back),
+                    contentDescription = "Înapoi",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+        )
+    )
+}
+
+@Composable
+private fun MissionSummary(score: Int, total: Int, onExit: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -144,15 +153,41 @@ fun MissionSummary(score: Int, total: Int, onExit: () -> Unit) {
 }
 
 @Composable
-fun QuizContent(
+private fun QuizContent(
     questions: List<Question>,
     currentQuestionIndex: Int,
     selectedOptionIndex: Int?,
     showFeedback: Boolean,
-    onAnswerClick: (Int, List<Question>) -> Unit
+    onAnswerClick: (Int) -> Unit
 ) {
-    val currentQuestion: Question = questions[currentQuestionIndex]
+    val currentQuestion = questions[currentQuestionIndex]
 
+    QuestionSurface(text = currentQuestion.text)
+
+    Spacer(modifier = Modifier.height(48.dp))
+
+    currentQuestion.options.forEachIndexed { index, answer ->
+        val isCorrect = index == currentQuestion.correctIndex
+        val isSelected = index == selectedOptionIndex
+        
+        val (containerColor, contentColor) = getAnswerButtonColors(
+            isSelected = isSelected,
+            isCorrect = isCorrect,
+            showFeedback = showFeedback
+        )
+
+        AnswerButton(
+            text = answer,
+            containerColor = containerColor,
+            contentColor = contentColor,
+            onClick = { onAnswerClick(index) }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun QuestionSurface(text: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -160,50 +195,37 @@ fun QuizContent(
         tonalElevation = 2.dp
     ) {
         Text(
-            text = currentQuestion.text,
+            text = text,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(32.dp)
         )
     }
+}
 
-    Spacer(modifier = Modifier.height(48.dp))
-
-    currentQuestion.options.forEachIndexed { index, answer ->
-        val isCorrect = index == currentQuestion.correctIndex
-        val isSelected = index == selectedOptionIndex
-        val colors = MaterialTheme.colorScheme
-        
-        val (containerColor, contentColor) = when {
-            !showFeedback -> {
-                colors.surface to colors.onSurface
-            }
-            isCorrect -> {
-                colors.tertiaryContainer to colors.onTertiaryContainer
-            }
-            isSelected -> {
-                colors.errorContainer to colors.onErrorContainer
-            }
-            else -> {
-                colors.surfaceVariant to colors.onSurfaceVariant
-            }
-        }
-
-        AnswerButton(
-            text = answer,
-            containerColor = containerColor,
-            contentColor = contentColor,
-            onClick = {
-                onAnswerClick(index, questions)
-            }
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+@Composable
+private fun getAnswerButtonColors(
+    isSelected: Boolean,
+    isCorrect: Boolean,
+    showFeedback: Boolean
+): Pair<Color, Color> {
+    val colors = MaterialTheme.colorScheme
+    return when {
+        !showFeedback -> colors.surface to colors.onSurface
+        isCorrect -> colors.tertiaryContainer to colors.onTertiaryContainer
+        isSelected -> colors.errorContainer to colors.onErrorContainer
+        else -> colors.surfaceVariant to colors.onSurfaceVariant
     }
 }
 
 @Composable
-fun AnswerButton(text: String, containerColor: Color, contentColor: Color, onClick: () -> Unit) {
+private fun AnswerButton(
+    text: String,
+    containerColor: Color,
+    contentColor: Color,
+    onClick: () -> Unit
+) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -331,6 +353,7 @@ fun QuizScreenPreviewFactory(
             currentQuestionIndex = 0,
             selectedOptionIndex = previewState.selectedOptionIndex,
             showFeedback = previewState.showFeedback,
+            snackbarHostState = remember { SnackbarHostState() },
             onAnswerClick = { _, _ -> },
             onFinishQuiz = { _, _, _ -> },
             onNavigateBack = {}
