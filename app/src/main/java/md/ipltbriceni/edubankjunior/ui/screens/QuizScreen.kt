@@ -166,8 +166,8 @@ private fun QuizContent(
 
     Spacer(modifier = Modifier.height(48.dp))
 
-    currentQuestion.options.forEachIndexed { index, answer ->
-        val isCorrect = index == currentQuestion.correctIndex
+    currentQuestion.shuffledOptions.forEachIndexed { index, answer ->
+        val isCorrect = answer == currentQuestion.correctAnswerText
         val isSelected = index == selectedOptionIndex
         
         val (containerColor, contentColor) = getAnswerButtonColors(

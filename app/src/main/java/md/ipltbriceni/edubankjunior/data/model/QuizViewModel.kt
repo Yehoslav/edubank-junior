@@ -27,7 +27,14 @@ data class Question(
     @get:PropertyName("correct")
     @set:PropertyName("correct")
     var correctIndex: Int = 0
-)
+) {
+    // Computed property to find the correct answer text before shuffling
+    val correctAnswerText: String
+        get() = options.getOrElse(correctIndex) { "" }
+
+    // Shuffled version of options for UI display
+    val shuffledOptions: List<String> by lazy { options.shuffled() }
+}
 
 class QuizViewModel(private val repository: QuizRepository) : ViewModel() {
     
@@ -54,10 +61,11 @@ class QuizViewModel(private val repository: QuizRepository) : ViewModel() {
         if (showFeedback) return // Prevent double-clicks during the flash
 
         val currentQuestion = questions[currentQuestionIndex]
+        val selectedAnswer = currentQuestion.shuffledOptions[selectedIndex]
         selectedOptionIndex = selectedIndex
         showFeedback = true
 
-        if (selectedIndex == currentQuestion.correctIndex) {
+        if (selectedAnswer == currentQuestion.correctAnswerText) {
             score++
         }
 
