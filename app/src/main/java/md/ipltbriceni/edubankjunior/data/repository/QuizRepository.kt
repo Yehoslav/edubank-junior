@@ -47,7 +47,7 @@ class QuizRepository(
         awaitClose { subscription.remove() }
     }
 
-    // --- Autenticare ---
+    // --- Autentificare ---
     suspend fun signUp(email: String, pass: String) {
         val result = auth.createUserWithEmailAndPassword(email, pass).await()
         val uid = result.user?.uid ?: return

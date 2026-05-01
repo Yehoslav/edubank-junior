@@ -37,16 +37,18 @@ import androidx.compose.ui.graphics.Brush
 @Composable
 fun DashboardScreen(
     viewModel: TicketsViewModel,
+    snackbarHostState: SnackbarHostState,
+    onStartTest: (Int) -> Unit,
     onAllTicketsClick: () -> Unit,
-    onTicketSelected: (Int) -> Unit,
+    onQuickTestClick: (Int) -> Unit,
+    onTicketClick: (Int) -> Unit,
     onLogout: () -> Unit
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
     val ticketsWithProgress by viewModel.tickets.collectAsState()
     val showProgressDialog = remember { mutableStateOf(false) }
 
     // Listen for error events from the ViewModel
-    LaunchedEffect(Unit) {
+    LaunchedEffect(viewModel.errorEvents) {
         viewModel.errorEvents.collect { message ->
             val result = snackbarHostState.showSnackbar(
                 message = message,
@@ -65,8 +67,10 @@ fun DashboardScreen(
         ticketsWithProgress = ticketsWithProgress,
         showProgressDialog = showProgressDialog.value,
         onShowProgressChange = { showProgressDialog.value = it },
+        onStartTest = onStartTest,
         onAllTicketsClick = onAllTicketsClick,
-        onTicketSelected = onTicketSelected,
+        onQuickTestClick = onQuickTestClick,
+        onTicketClick = onTicketClick,
         onLogout = onLogout
     )
 }
@@ -77,8 +81,10 @@ fun DashboardContent(
     ticketsWithProgress: List<Pair<Ticket, TicketProgress?>>,
     showProgressDialog: Boolean,
     onShowProgressChange: (Boolean) -> Unit,
+    onStartTest: (Int) -> Unit,
     onAllTicketsClick: () -> Unit,
-    onTicketSelected: (Int) -> Unit,
+    onQuickTestClick: (Int) -> Unit,
+    onTicketClick: (Int) -> Unit,
     onLogout: () -> Unit
 ) {
     if (showProgressDialog) {
@@ -117,11 +123,11 @@ fun DashboardContent(
                 HeroProgressCard(
                     completed = completedCount,
                     total = totalCount,
-                    onStartClick = { onTicketSelected(nextTicketId) }
+                    onStartClick = { onStartTest(nextTicketId) }
                 )
 
                 ActionButtonsRow(
-                    onQuickTest = { onTicketSelected(nextTicketId) },
+                    onQuickTest = { onQuickTestClick(nextTicketId) },
                     onAllTickets = onAllTicketsClick,
                     onShowProgress = { onShowProgressChange(true) }
                 )
@@ -132,7 +138,7 @@ fun DashboardContent(
                         .thenBy { it.second?.correct ?: 0 }
                 ).take(4)
 
-                NextTicketsSection(sortedTickets, onTicketSelected)
+                NextTicketsSection(sortedTickets, onTicketClick)
             }
         }
     }
@@ -413,24 +419,6 @@ class DashboardPreviewProvider : PreviewParameterProvider<List<Pair<Ticket, Tick
     )
 }
 
-@Preview(showBackground = true, name = "Dashboard Full, Dark")
-@Composable
-fun DashboardContentDarkPreview(
-    @PreviewParameter(DashboardPreviewProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>
-) {
-    EduBankJuniorTheme(darkTheme = true) {
-        DashboardContent(
-            isLoading = false,
-            ticketsWithProgress = tickets,
-            showProgressDialog = false,
-            onShowProgressChange = {},
-            onAllTicketsClick = {},
-            onTicketSelected = {},
-            onLogout = {}
-        )
-    }
-}
-
 @Preview(showBackground = true, name = "Dashboard Full")
 @Composable
 fun DashboardContentPreview(
@@ -442,8 +430,10 @@ fun DashboardContentPreview(
             ticketsWithProgress = tickets,
             showProgressDialog = false,
             onShowProgressChange = {},
+            onStartTest = {},
             onAllTicketsClick = {},
-            onTicketSelected = {},
+            onQuickTestClick = {},
+            onTicketClick = {},
             onLogout = {}
         )
     }
@@ -458,8 +448,10 @@ fun DashboardLoadingPreview() {
             ticketsWithProgress = emptyList(),
             showProgressDialog = false,
             onShowProgressChange = {},
-            onTicketSelected = {},
+            onStartTest = {},
             onAllTicketsClick = {},
+            onQuickTestClick = {},
+            onTicketClick = {},
             onLogout = {}
         )
     }

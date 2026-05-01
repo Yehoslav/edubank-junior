@@ -53,10 +53,16 @@ fun QuizScreen(ticketId: Int, viewModel: QuizViewModel, onNavigateBack: () -> Un
                 val uiState by viewModel.uiState.collectAsState()
 
                 when (val state = uiState) {
+                    is QuizUiState.Error -> Text(state.message)
                     is QuizUiState.Loading -> CircularProgressIndicator()
                     is QuizUiState.Success -> {
                         if (viewModel.isMissionComplete) {
-                            viewModel.finishQuiz(ticketId, viewModel.score, state.questions.size, onComplete = {})
+                            viewModel.finishQuiz(
+                                ticketId,
+                                viewModel.score,
+                                state.questions.size,
+                                onComplete = {}
+                            )
                             MissionSummary(
                                 score = viewModel.score,
                                 total = state.questions.size,
@@ -66,7 +72,6 @@ fun QuizScreen(ticketId: Int, viewModel: QuizViewModel, onNavigateBack: () -> Un
                             QuizContent(state.questions, viewModel)
                         }
                     }
-                    is QuizUiState.Error -> Text(state.message)
                 }
             }
         }
@@ -104,13 +109,12 @@ fun MissionSummary(score: Int, total: Int, onExit: () -> Unit) {
 
 @Composable
 fun QuizContent(questions: List<Question>, viewModel: QuizViewModel) {
-
     val currentQuestion: Question = questions[viewModel.currentQuestionIndex]
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surface, // White
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 2.dp
     ) {
         Text(
@@ -127,19 +131,20 @@ fun QuizContent(questions: List<Question>, viewModel: QuizViewModel) {
     currentQuestion.options.forEachIndexed { index, answer ->
         val isCorrect = index == currentQuestion.correctIndex
         val isSelected = index == viewModel.selectedOptionIndex
+        val colors = MaterialTheme.colorScheme
         
         val (containerColor, contentColor) = when {
             !viewModel.showFeedback -> {
-                MaterialTheme.colorScheme.surface to MaterialTheme.colorScheme.onSurface
+                colors.surface to colors.onSurface
             }
             isCorrect -> {
-                MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
+                colors.tertiaryContainer to colors.onTertiaryContainer
             }
             isSelected -> {
-                MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+                colors.errorContainer to colors.onErrorContainer
             }
             else -> {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) to MaterialTheme.colorScheme.onSurfaceVariant
+                colors.surfaceVariant to colors.onSurfaceVariant
             }
         }
 

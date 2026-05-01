@@ -14,6 +14,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import md.ipltbriceni.edubankjunior.data.repository.QuizRepository
 
+data class Ticket(
+    val id: Int = 0,
+    val title: String = ""
+)
+
+data class TicketProgress(
+    val correct: Int = 0,
+    val total: Int = 0
+)
+
 class TicketsViewModel(private val repository: QuizRepository) : ViewModel() {
     var isLoading by mutableStateOf(false)
         private set

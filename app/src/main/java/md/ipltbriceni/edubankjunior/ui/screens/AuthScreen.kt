@@ -12,9 +12,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,10 +30,20 @@ import md.ipltbriceni.edubankjunior.data.model.AuthViewModel
 import md.ipltbriceni.edubankjunior.ui.theme.EduBankJuniorTheme
 
 @Composable
-fun AuthScreen(viewModel: AuthViewModel, onAuthSuccess: () -> Unit) {
+fun AuthScreen(
+    viewModel: AuthViewModel, 
+    snackbarHostState: SnackbarHostState,
+    onAuthSuccess: () -> Unit
+) {
+    // Collect error messages from the ViewModel and show them in a Snackbar
+    LaunchedEffect(viewModel.error) {
+        viewModel.error?.let { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     AuthContent(
         isLoading = viewModel.isLoading,
-        error = viewModel.error,
         onAuthClick = { isLogin, email, password ->
             viewModel.performAuth(isLogin, email, password, onAuthSuccess)
         }
@@ -41,7 +53,6 @@ fun AuthScreen(viewModel: AuthViewModel, onAuthSuccess: () -> Unit) {
 @Composable
 fun AuthContent(
     isLoading: Boolean,
-    error: String?,
     onAuthClick: (isLogin: Boolean, email: String, password: String) -> Unit
 ) {
     var isLogin by remember { mutableStateOf(true) }
@@ -66,7 +77,7 @@ fun AuthContent(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email Student") },
+            label = { Text("Email") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -81,11 +92,6 @@ fun AuthContent(
             visualTransformation = PasswordVisualTransformation(),
             singleLine = true
         )
-
-        // Show error message if it exists
-        error?.let {
-            Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 16.dp))
-        }
 
         Spacer(Modifier.height(32.dp))
 
@@ -115,7 +121,6 @@ fun AuthContentPreview() {
     EduBankJuniorTheme {
         AuthContent(
             isLoading = false,
-            error = null,
             onAuthClick = { _, _, _ -> }
         )
     }
@@ -127,19 +132,6 @@ fun AuthContentLoadingPreview() {
     EduBankJuniorTheme {
         AuthContent(
             isLoading = true,
-            error = null,
-            onAuthClick = { _, _, _ -> }
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AuthContentErrorPreview() {
-    EduBankJuniorTheme {
-        AuthContent(
-            isLoading = false,
-            error = "E-mail sau parolă greșită",
             onAuthClick = { _, _, _ -> }
         )
     }

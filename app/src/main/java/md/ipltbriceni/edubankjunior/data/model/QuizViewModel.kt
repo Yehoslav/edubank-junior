@@ -2,6 +2,7 @@ package md.ipltbriceni.edubankjunior.data.model
 
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -12,18 +13,32 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import md.ipltbriceni.edubankjunior.data.repository.QuizRepository
 
-class QuizViewModel(
-    private val repository: QuizRepository,
-) : ViewModel() {
+import com.google.firebase.firestore.PropertyName
+
+data class Question(
+    @get:PropertyName("q")
+    @set:PropertyName("q")
+    var text: String = "",
+
+    @get:PropertyName("a")
+    @set:PropertyName("a")
+    var options: List<String> = emptyList(),
+
+    @get:PropertyName("correct")
+    @set:PropertyName("correct")
+    var correctIndex: Int = 0
+)
+
+class QuizViewModel(private val repository: QuizRepository) : ViewModel() {
     
     private val _uiState = MutableStateFlow<QuizUiState>(QuizUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
     // Simple variables for tracking the quiz
-    var currentQuestionIndex by mutableStateOf(0)
+    var currentQuestionIndex by mutableIntStateOf(0)
         private set
     
-    var score by mutableStateOf(0)
+    var score by mutableIntStateOf(0)
         private set
 
     var isMissionComplete by mutableStateOf(false)
