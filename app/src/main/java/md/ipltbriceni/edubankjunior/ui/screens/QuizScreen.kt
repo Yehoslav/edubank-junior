@@ -12,6 +12,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import md.ipltbriceni.edubankjunior.R
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import md.ipltbriceni.edubankjunior.ui.theme.EduBankJuniorTheme
 import md.ipltbriceni.edubankjunior.data.model.Question
 import md.ipltbriceni.edubankjunior.data.model.QuizUiState
 import md.ipltbriceni.edubankjunior.data.model.QuizViewModel
@@ -19,7 +23,36 @@ import md.ipltbriceni.edubankjunior.data.model.QuizViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuizScreen(ticketId: Int, viewModel: QuizViewModel, onNavigateBack: () -> Unit = {}) {
+    val uiState by viewModel.uiState.collectAsState()
 
+    QuizScreenContent(
+        ticketId = ticketId,
+        uiState = uiState,
+        isMissionComplete = viewModel.isMissionComplete,
+        score = viewModel.score,
+        currentQuestionIndex = viewModel.currentQuestionIndex,
+        selectedOptionIndex = viewModel.selectedOptionIndex,
+        showFeedback = viewModel.showFeedback,
+        onAnswerClick = { index, questions -> viewModel.checkAnswer(index, questions) },
+        onFinishQuiz = { tId, s, total -> viewModel.finishQuiz(tId, s, total, onComplete = {}) },
+        onNavigateBack = onNavigateBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun QuizScreenContent(
+    ticketId: Int,
+    uiState: QuizUiState,
+    isMissionComplete: Boolean,
+    score: Int,
+    currentQuestionIndex: Int,
+    selectedOptionIndex: Int?,
+    showFeedback: Boolean,
+    onAnswerClick: (Int, List<Question>) -> Unit,
+    onFinishQuiz: (Int, Int, Int) -> Unit,
+    onNavigateBack: () -> Unit
+) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -50,26 +83,29 @@ fun QuizScreen(ticketId: Int, viewModel: QuizViewModel, onNavigateBack: () -> Un
                     .padding(24.dp),
                 verticalArrangement = Arrangement.Center
             ) {
-                val uiState by viewModel.uiState.collectAsState()
-
-                when (val state = uiState) {
-                    is QuizUiState.Error -> Text(state.message)
+                when (uiState) {
+                    is QuizUiState.Error -> Text(uiState.message)
                     is QuizUiState.Loading -> CircularProgressIndicator()
                     is QuizUiState.Success -> {
-                        if (viewModel.isMissionComplete) {
-                            viewModel.finishQuiz(
+                        if (isMissionComplete) {
+                            onFinishQuiz(
                                 ticketId,
-                                viewModel.score,
-                                state.questions.size,
-                                onComplete = {}
+                                score,
+                                uiState.questions.size
                             )
                             MissionSummary(
-                                score = viewModel.score,
-                                total = state.questions.size,
+                                score = score,
+                                total = uiState.questions.size,
                                 onExit = onNavigateBack
                             )
                         } else {
-                            QuizContent(state.questions, viewModel)
+                            QuizContent(
+                                questions = uiState.questions,
+                                currentQuestionIndex = currentQuestionIndex,
+                                selectedOptionIndex = selectedOptionIndex,
+                                showFeedback = showFeedback,
+                                onAnswerClick = onAnswerClick
+                            )
                         }
                     }
                 }
@@ -108,8 +144,14 @@ fun MissionSummary(score: Int, total: Int, onExit: () -> Unit) {
 }
 
 @Composable
-fun QuizContent(questions: List<Question>, viewModel: QuizViewModel) {
-    val currentQuestion: Question = questions[viewModel.currentQuestionIndex]
+fun QuizContent(
+    questions: List<Question>,
+    currentQuestionIndex: Int,
+    selectedOptionIndex: Int?,
+    showFeedback: Boolean,
+    onAnswerClick: (Int, List<Question>) -> Unit
+) {
+    val currentQuestion: Question = questions[currentQuestionIndex]
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -130,11 +172,11 @@ fun QuizContent(questions: List<Question>, viewModel: QuizViewModel) {
 
     currentQuestion.options.forEachIndexed { index, answer ->
         val isCorrect = index == currentQuestion.correctIndex
-        val isSelected = index == viewModel.selectedOptionIndex
+        val isSelected = index == selectedOptionIndex
         val colors = MaterialTheme.colorScheme
         
         val (containerColor, contentColor) = when {
-            !viewModel.showFeedback -> {
+            !showFeedback -> {
                 colors.surface to colors.onSurface
             }
             isCorrect -> {
@@ -153,7 +195,7 @@ fun QuizContent(questions: List<Question>, viewModel: QuizViewModel) {
             containerColor = containerColor,
             contentColor = contentColor,
             onClick = {
-                viewModel.checkAnswer(index, questions)
+                onAnswerClick(index, questions)
             }
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -190,4 +232,132 @@ fun AnswerButton(text: String, containerColor: Color, contentColor: Color, onCli
             )
         }
     }
+}
+
+// --- PREVIEWS ---
+
+data class QuizPreviewState(
+    val name: String,
+    val uiState: QuizUiState,
+    val isMissionComplete: Boolean = false,
+    val score: Int = 0,
+    val selectedOptionIndex: Int? = null,
+    val showFeedback: Boolean = false,
+    val darkTheme: Boolean = false
+)
+
+private val sampleQuestions = listOf(
+    Question(
+        text = "Ce este un buget?",
+        options = listOf("Un plan de cheltuieli", "O listă de dorințe", "O bancă", "Un card"),
+        correctIndex = 0
+    )
+)
+
+class LightQuizPreviewParameterProvider : PreviewParameterProvider<QuizPreviewState> {
+    override val values = sequenceOf(
+        QuizPreviewState(
+            name = "Light Mode",
+            uiState = QuizUiState.Success(sampleQuestions),
+            darkTheme = false
+        ),
+        QuizPreviewState(
+            name = "Correct Answer",
+            uiState = QuizUiState.Success(sampleQuestions),
+            selectedOptionIndex = 0,
+            showFeedback = true
+        ),
+        QuizPreviewState(
+            name = "Wrong Answer",
+            uiState = QuizUiState.Success(sampleQuestions),
+            selectedOptionIndex = 1,
+            showFeedback = true
+        ),
+    )
+}
+
+class DarkQuizPreviewParameterProvider : PreviewParameterProvider<QuizPreviewState> {
+    override val values = sequenceOf(
+        QuizPreviewState(
+            name = "Light Mode",
+            uiState = QuizUiState.Success(sampleQuestions),
+            darkTheme = true
+        ),
+        QuizPreviewState(
+            name = "Correct Answer",
+            uiState = QuizUiState.Success(sampleQuestions),
+            selectedOptionIndex = 0,
+            darkTheme = true,
+            showFeedback = true
+        ),
+        QuizPreviewState(
+            name = "Wrong Answer",
+            uiState = QuizUiState.Success(sampleQuestions),
+            selectedOptionIndex = 1,
+            darkTheme = true,
+            showFeedback = true
+        ),
+    )
+}
+
+class MissionCompletePreviewParameterProvider : PreviewParameterProvider<QuizPreviewState> {
+    override val values = sequenceOf(
+        QuizPreviewState(
+            name = "Mission Complete Light",
+            uiState = QuizUiState.Success(sampleQuestions),
+            isMissionComplete = true,
+            score = 1
+        ),
+        QuizPreviewState(
+            name = "Mission Complete Dark",
+            uiState = QuizUiState.Success(sampleQuestions),
+            isMissionComplete = true,
+            darkTheme = true,
+            score = 1
+        )
+    )
+}
+
+@Composable
+fun QuizScreenPreviewFactory(
+    previewState: QuizPreviewState
+) {
+    EduBankJuniorTheme(darkTheme = previewState.darkTheme) {
+        QuizScreenContent(
+            ticketId = 1,
+            uiState = previewState.uiState,
+            isMissionComplete = previewState.isMissionComplete,
+            score = previewState.score,
+            currentQuestionIndex = 0,
+            selectedOptionIndex = previewState.selectedOptionIndex,
+            showFeedback = previewState.showFeedback,
+            onAnswerClick = { _, _ -> },
+            onFinishQuiz = { _, _, _ -> },
+            onNavigateBack = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name="Light Quiz Interactions")
+@Composable
+fun LightQuizScreenPreview(
+    @PreviewParameter(LightQuizPreviewParameterProvider::class) previewState: QuizPreviewState
+) {
+    QuizScreenPreviewFactory(previewState)
+}
+
+@Preview(showBackground = true, name="Dark Quiz Interactions")
+@Composable
+fun DarkQuizScreenPreview(
+    @PreviewParameter(DarkQuizPreviewParameterProvider::class) previewState: QuizPreviewState
+) {
+    QuizScreenPreviewFactory(previewState)
+}
+
+@Preview(showBackground = true, name = "Mission Complete")
+@Composable
+fun QuizScreenPreview(
+    @PreviewParameter(MissionCompletePreviewParameterProvider::class) previewState: QuizPreviewState
+) {
+    QuizScreenPreviewFactory(previewState)
 }

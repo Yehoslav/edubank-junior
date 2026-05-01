@@ -419,12 +419,32 @@ class DashboardPreviewProvider : PreviewParameterProvider<List<Pair<Ticket, Tick
     )
 }
 
-@Preview(showBackground = true, name = "Dashboard Full")
+@Preview(showBackground = true, name = "Dashboard Full: Light")
 @Composable
 fun DashboardContentPreview(
     @PreviewParameter(DashboardPreviewProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>
 ) {
-    EduBankJuniorTheme {
+    EduBankJuniorTheme(darkTheme = false) {
+        DashboardContent(
+            isLoading = false,
+            ticketsWithProgress = tickets,
+            showProgressDialog = false,
+            onShowProgressChange = {},
+            onStartTest = {},
+            onAllTicketsClick = {},
+            onQuickTestClick = {},
+            onTicketClick = {},
+            onLogout = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Dashboard Full: Dark")
+@Composable
+fun DashboardContentDarkPreview(
+    @PreviewParameter(DashboardPreviewProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>
+) {
+    EduBankJuniorTheme(darkTheme = true) {
         DashboardContent(
             isLoading = false,
             ticketsWithProgress = tickets,

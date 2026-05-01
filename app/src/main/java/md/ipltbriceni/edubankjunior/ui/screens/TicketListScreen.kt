@@ -190,40 +190,94 @@ fun TicketCard(ticket: Ticket, progress: TicketProgress?, onTicketClick: (Int) -
     }
 }
 
-class TicketProvider : PreviewParameterProvider<List<Pair<Ticket, TicketProgress?>>> {
-    override val values = sequenceOf(
-        emptyList(), // Test empty state
-        List(5) {
-            Ticket(it, "Bilet Repetat $it") to if (it % 2 == 0) TicketProgress(8, 10) else null
+@Preview(showBackground = true, name = "Ticket Card: Not Completed")
+@Composable
+fun TicketCardPreview() {
+    EduBankJuniorTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            TicketCard(
+                ticket = Ticket(1, "Educație Financiară"),
+                progress = null,
+                onTicketClick = {}
+            )
         }
-    )
+    }
 }
 
-@Preview(showBackground = true, name = "Tickets list Screen: Light")
+@Preview(showBackground = true, name = "Ticket Card: Completed")
 @Composable
-fun TicketListContentDarkPreview(
-    @PreviewParameter(TicketProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>
-) {
+fun TicketCardCompletedPreview() {
+    EduBankJuniorTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            TicketCard(
+                ticket = Ticket(2, "Banii și Băncile"),
+                progress = TicketProgress(8, 10),
+                onTicketClick = {}
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Screen: Loading")
+@Composable
+fun TicketListLoadingPreview() {
     EduBankJuniorTheme {
         TicketListContent(
-            isLoading = false,
-            ticketsWithProgress = tickets,
+            isLoading = true,
+            ticketsWithProgress = emptyList(),
             onTicketClick = {},
-            onNavigateBack = {},
+            onNavigateBack = {}
         )
     }
 }
-@Preview(showBackground = true, name = "Tickets list Screen: Light")
+
+@Preview(showBackground = true, name = "Screen: Empty")
 @Composable
-fun TicketListContentPreview(
+fun TicketListEmptyPreview() {
+    EduBankJuniorTheme {
+        TicketListContent(
+            isLoading = false,
+            ticketsWithProgress = emptyList(),
+            onTicketClick = {},
+            onNavigateBack = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Screen: Light Theme")
+@Composable
+fun TicketListLightPreview(
     @PreviewParameter(TicketProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>
 ) {
-    EduBankJuniorTheme {
+    EduBankJuniorTheme(darkTheme = false) {
         TicketListContent(
             isLoading = false,
             ticketsWithProgress = tickets,
             onTicketClick = {},
-            onNavigateBack = {},
+            onNavigateBack = {}
         )
     }
+}
+
+@Preview(showBackground = true, name = "Screen: Dark Theme")
+@Composable
+fun TicketListDarkPreview(
+    @PreviewParameter(TicketProvider::class) tickets: List<Pair<Ticket, TicketProgress?>>
+) {
+    EduBankJuniorTheme(darkTheme = true) {
+        TicketListContent(
+            isLoading = false,
+            ticketsWithProgress = tickets,
+            onTicketClick = {},
+            onNavigateBack = {}
+        )
+    }
+}
+
+class TicketProvider : PreviewParameterProvider<List<Pair<Ticket, TicketProgress?>>> {
+    override val values = sequenceOf(
+        List(5) {
+            Ticket(it, "Bilet de Studiu $it") to if (it % 2 == 0) TicketProgress(8, 10) else null
+        }
+    )
 }

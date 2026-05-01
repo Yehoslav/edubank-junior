@@ -115,10 +115,10 @@ fun AuthContent(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Screen: Light")
 @Composable
 fun AuthContentPreview() {
-    EduBankJuniorTheme {
+    EduBankJuniorTheme(darkTheme = false) {
         AuthContent(
             isLoading = false,
             onAuthClick = { _, _, _ -> }
@@ -126,7 +126,18 @@ fun AuthContentPreview() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Screen: Dark")
+@Composable
+fun AuthContentDarkPreview() {
+    EduBankJuniorTheme(darkTheme = true) {
+        AuthContent(
+            isLoading = false,
+            onAuthClick = { _, _, _ -> }
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Screen: Loading")
 @Composable
 fun AuthContentLoadingPreview() {
     EduBankJuniorTheme {
