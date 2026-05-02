@@ -29,7 +29,6 @@ class AuthViewModel(private val repository: QuizRepository) : ViewModel() {
                 }
                 onSuccess()
             } catch (e: Exception) {
-                // Firebase provides friendly error messages we can pass to the UI
                 error = e.localizedMessage ?: "A apărut o eroare la conectare."
             } finally {
                 isLoading = false

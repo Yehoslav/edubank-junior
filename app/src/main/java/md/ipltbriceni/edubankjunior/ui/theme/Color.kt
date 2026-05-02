@@ -2,13 +2,13 @@ package md.ipltbriceni.edubankjunior.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Light Theme Palette
+// Paletă de culori luminoasă
 val md_theme_light_primary = Color(0xFF169d91)
 val md_theme_light_onPrimary = Color(0xFFFFFFFF)
 val md_theme_light_primaryContainer = Color(0xFF0F6B63)
 val md_theme_light_onPrimaryContainer = Color(0xFFFFFFFF)
 
-val md_theme_light_secondary = Color(0xFF169d91) // Using primary for secondary if no specific color
+val md_theme_light_secondary = Color(0xFF169d91)
 val md_theme_light_onSecondary = Color(0xFFFFFFFF)
 
 val md_theme_light_tertiary = Color(0xFF4CAF50)
@@ -28,7 +28,7 @@ val md_theme_light_onSurface = Color(0xFF2D2D2D)
 val md_theme_light_surfaceVariant = Color(0xFFE0E0E0)
 val md_theme_light_onSurfaceVariant = Color(0xFF7A7A7A)
 
-// Dark Theme Palette
+// Paletă de culori întunecată
 val md_theme_dark_primary = Color(0xFF169d91)
 val md_theme_dark_onPrimary = Color(0xFF003733)
 val md_theme_dark_primaryContainer = Color(0xFF00504B)
@@ -50,6 +50,3 @@ val md_theme_dark_surface = Color(0xFF093F3B)
 val md_theme_dark_onSurface = Color(0xFFE0E3E1)
 val md_theme_dark_surfaceVariant = Color(0xFF3F4947)
 val md_theme_dark_onSurfaceVariant = Color(0xFFBFC9C6)
-
-// Hero Gradient (Used in both themes, but can be adjusted)
-// Moved to DashboardScreen.kt as a Composable to support dynamic themes

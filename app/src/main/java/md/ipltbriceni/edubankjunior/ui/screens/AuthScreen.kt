@@ -33,11 +33,10 @@ import md.ipltbriceni.edubankjunior.ui.theme.EduBankJuniorTheme
 
 @Composable
 fun AuthScreen(
-    viewModel: AuthViewModel, 
+    viewModel: AuthViewModel,
     snackbarHostState: SnackbarHostState,
     onAuthSuccess: () -> Unit
 ) {
-    // Collect error messages from the ViewModel and show them in a Snackbar
     LaunchedEffect(viewModel.error) {
         viewModel.error?.let { message ->
             snackbarHostState.showSnackbar(message)

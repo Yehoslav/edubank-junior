@@ -29,6 +29,13 @@ fun QuizScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Observe error events from the ViewModel
+    LaunchedEffect(viewModel.errorEvents) {
+        viewModel.errorEvents.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     QuizScreenContent(
         ticketId = ticketId,
         uiState = uiState,
@@ -37,6 +44,7 @@ fun QuizScreen(
         currentQuestionIndex = viewModel.currentQuestionIndex,
         selectedOptionIndex = viewModel.selectedOptionIndex,
         showFeedback = viewModel.showFeedback,
+        isSaving = viewModel.isSaving,
         snackbarHostState = snackbarHostState,
         onAnswerClick = { index, questions -> viewModel.checkAnswer(index, questions) },
         onFinishQuiz = { tId, s, total -> viewModel.finishQuiz(tId, s, total, onComplete = {}) },
@@ -54,6 +62,7 @@ private fun QuizScreenContent(
     currentQuestionIndex: Int,
     selectedOptionIndex: Int?,
     showFeedback: Boolean,
+    isSaving: Boolean,
     snackbarHostState: SnackbarHostState,
     onAnswerClick: (Int, List<Question>) -> Unit,
     onFinishQuiz: (Int, Int, Int) -> Unit,
@@ -85,6 +94,7 @@ private fun QuizScreenContent(
                         MissionSummary(
                             score = score,
                             total = uiState.questions.size,
+                            isSaving = isSaving,
                             onExit = onNavigateBack
                         )
                     } else {
@@ -125,7 +135,7 @@ private fun QuizTopAppBar(ticketId: Int, onNavigateBack: () -> Unit) {
 }
 
 @Composable
-private fun MissionSummary(score: Int, total: Int, onExit: () -> Unit) {
+private fun MissionSummary(score: Int, total: Int, isSaving: Boolean, onExit: () -> Unit) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -140,14 +150,20 @@ private fun MissionSummary(score: Int, total: Int, onExit: () -> Unit) {
         
         Spacer(modifier = Modifier.height(32.dp))
         
-        Button(
-            onClick = onExit,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            Text("Înapoi la Dashboard")
+        if (isSaving) {
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Se salvează scorul...", style = MaterialTheme.typography.bodySmall)
+        } else {
+            Button(
+                onClick = onExit,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Text("Înapoi la Dashboard")
+            }
         }
     }
 }
@@ -356,6 +372,7 @@ fun QuizScreenPreviewFactory(
             currentQuestionIndex = 0,
             selectedOptionIndex = previewState.selectedOptionIndex,
             showFeedback = previewState.showFeedback,
+            isSaving = false,
             snackbarHostState = remember { SnackbarHostState() },
             onAnswerClick = { _, _ -> },
             onFinishQuiz = { _, _, _ -> },

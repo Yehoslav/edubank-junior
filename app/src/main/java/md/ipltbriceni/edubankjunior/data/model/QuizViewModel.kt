@@ -7,9 +7,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import md.ipltbriceni.edubankjunior.data.repository.QuizRepository
 
@@ -28,11 +30,10 @@ data class Question(
     @set:PropertyName("correct")
     var correctIndex: Int = 0
 ) {
-    // Computed property to find the correct answer text before shuffling
     val correctAnswerText: String
         get() = options.getOrElse(correctIndex) { "" }
 
-    // Shuffled version of options for UI display
+    // shuffled va crea o nouă listă, așa că `correctAnswerText` nu va fi afectat
     val shuffledOptions: List<String> by lazy { options.shuffled() }
 }
 
@@ -41,7 +42,9 @@ class QuizViewModel(private val repository: QuizRepository) : ViewModel() {
     private val _uiState = MutableStateFlow<QuizUiState>(QuizUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
-    // Simple variables for tracking the quiz
+    private val _errorEvents = Channel<String>()
+    val errorEvents = _errorEvents.receiveAsFlow()
+
     var currentQuestionIndex by mutableIntStateOf(0)
         private set
     
@@ -58,7 +61,7 @@ class QuizViewModel(private val repository: QuizRepository) : ViewModel() {
         private set
 
     fun checkAnswer(selectedIndex: Int, questions: List<Question>) {
-        if (showFeedback) return // Prevent double-clicks during the flash
+        if (showFeedback) return // Ignoră apăsările multiple în timp ce se afișează răspunsurile
 
         val currentQuestion = questions[currentQuestionIndex]
         val selectedAnswer = currentQuestion.shuffledOptions[selectedIndex]
@@ -69,9 +72,9 @@ class QuizViewModel(private val repository: QuizRepository) : ViewModel() {
             score++
         }
 
-        // 2. Wait 1 second, then move to the next question
+        // Așteaptă pentru a afișa răspunsul ne/corect și treci la următoarea întrebare
         viewModelScope.launch {
-            delay(1000) // The "flash" duration
+            delay(1000) // Timpul de fișare a răspunsurilor marcate ne/corect
             
             showFeedback = false
             selectedOptionIndex = null
@@ -98,18 +101,16 @@ class QuizViewModel(private val repository: QuizRepository) : ViewModel() {
     var isSaving by mutableStateOf(false)
         private set
 
-    /**
-     * Called when the student finishes the last question.
-     */
+    /** Se execută după ce utilizatorul a răspuns la ultima întrebare de pe bilet */
     fun finishQuiz(ticketId: Int, correct: Int, total: Int, onComplete: () -> Unit) {
         viewModelScope.launch {
             isSaving = true
             try {
                 repository.saveTicketScore(ticketId, correct, total)
-                onComplete() // Navigate back to Dashboard
+                onComplete()
             } catch (e: Exception) {
                 Log.e("QuizViewModel", "Failed to save score", e)
-                // Optionally show a Toast error here
+                _errorEvents.trySend("Nu s-a putut salva scorul. Verifică conexiunea.")
             } finally {
                 isSaving = false
             }
