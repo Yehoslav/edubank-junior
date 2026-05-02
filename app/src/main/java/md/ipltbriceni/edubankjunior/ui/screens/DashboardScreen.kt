@@ -67,6 +67,7 @@ fun DashboardScreen(
         ticketsWithProgress = ticketsWithProgress,
         showProgressDialog = showProgressDialog.value,
         snackbarHostState = snackbarHostState,
+        currentUserEmail = viewModel.currentUserEmail,
         onShowProgressChange = { showProgressDialog.value = it },
         onStartTest = onStartTest,
         onAllTicketsClick = onAllTicketsClick,
@@ -82,6 +83,7 @@ fun DashboardContent(
     ticketsWithProgress: List<Pair<Ticket, TicketProgress?>>,
     showProgressDialog: Boolean,
     snackbarHostState: SnackbarHostState,
+    currentUserEmail: String?,
     onShowProgressChange: (Boolean) -> Unit,
     onStartTest: (Int) -> Unit,
     onAllTicketsClick: () -> Unit,
@@ -97,7 +99,7 @@ fun DashboardContent(
     }
 
     Scaffold(
-        topBar = { DashboardHeader(onLogout = onLogout) },
+        topBar = { DashboardHeader(email = currentUserEmail, onLogout = onLogout) },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(
@@ -148,7 +150,7 @@ fun DashboardContent(
 }
 
 @Composable
-fun DashboardHeader(modifier: Modifier = Modifier, onLogout: () -> Unit = {}) {
+fun DashboardHeader(modifier: Modifier = Modifier, email: String? = null, onLogout: () -> Unit = {}) {
     var showMenu by remember { mutableStateOf(false) }
 
     Row(
@@ -185,6 +187,20 @@ fun DashboardHeader(modifier: Modifier = Modifier, onLogout: () -> Unit = {}) {
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false }
             ) {
+                if (email != null) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = email,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
+                        onClick = { },
+                        enabled = false
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                }
                 DropdownMenuItem(
                     text = { Text("Log out") },
                     onClick = {
@@ -433,6 +449,7 @@ fun DashboardContentPreview(
             ticketsWithProgress = tickets,
             showProgressDialog = false,
             snackbarHostState = remember { SnackbarHostState() },
+            currentUserEmail = "student@example.md",
             onShowProgressChange = {},
             onStartTest = {},
             onAllTicketsClick = {},
@@ -454,6 +471,7 @@ fun DashboardContentDarkPreview(
             ticketsWithProgress = tickets,
             showProgressDialog = false,
             snackbarHostState = remember { SnackbarHostState() },
+            currentUserEmail = "student@example.md",
             onShowProgressChange = {},
             onStartTest = {},
             onAllTicketsClick = {},
@@ -473,6 +491,7 @@ fun DashboardLoadingPreview() {
             ticketsWithProgress = emptyList(),
             showProgressDialog = false,
             snackbarHostState = remember { SnackbarHostState() },
+            currentUserEmail = null,
             onShowProgressChange = {},
             onStartTest = {},
             onAllTicketsClick = {},

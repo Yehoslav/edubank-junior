@@ -55,4 +55,7 @@ class TicketsViewModel(private val repository: QuizRepository) : ViewModel() {
     fun loadTickets() {
         refreshTrigger.tryEmit(Unit)
     }
+
+    val currentUserEmail: String?
+        get() = repository.currentUserEmail
 }

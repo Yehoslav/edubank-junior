@@ -74,6 +74,9 @@ class QuizRepository(
         auth.signOut()
     }
 
+    val currentUserEmail: String?
+        get() = auth.currentUser?.email
+
     // --- Scor ---
     fun getUserProgress(): Flow<Map<String, TicketProgress>> = callbackFlow {
         val uid = auth.currentUser?.uid ?: run {
