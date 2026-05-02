@@ -38,9 +38,7 @@ import androidx.compose.ui.graphics.Brush
 fun DashboardScreen(
     viewModel: TicketsViewModel,
     snackbarHostState: SnackbarHostState,
-    onStartTest: (Int) -> Unit,
     onAllTicketsClick: () -> Unit,
-    onQuickTestClick: (Int) -> Unit,
     onTicketClick: (Int) -> Unit,
     onLogout: () -> Unit
 ) {
@@ -69,9 +67,7 @@ fun DashboardScreen(
         snackbarHostState = snackbarHostState,
         currentUserEmail = viewModel.currentUserEmail,
         onShowProgressChange = { showProgressDialog.value = it },
-        onStartTest = onStartTest,
         onAllTicketsClick = onAllTicketsClick,
-        onQuickTestClick = onQuickTestClick,
         onTicketClick = onTicketClick,
         onLogout = onLogout
     )
@@ -85,9 +81,7 @@ fun DashboardContent(
     snackbarHostState: SnackbarHostState,
     currentUserEmail: String?,
     onShowProgressChange: (Boolean) -> Unit,
-    onStartTest: (Int) -> Unit,
     onAllTicketsClick: () -> Unit,
-    onQuickTestClick: (Int) -> Unit,
     onTicketClick: (Int) -> Unit,
     onLogout: () -> Unit
 ) {
@@ -121,18 +115,18 @@ fun DashboardContent(
                 val completedCount = ticketsWithProgress.count { it.second != null }
                 val totalCount = ticketsWithProgress.size
                 
-                // Find the first unanswered ticket, or a random one if all are answered
+                // Alege următorul bilet fără răspuns, sau unul la întâmplare în caz că toate biletele au un răspuns
                 val nextTicketId = ticketsWithProgress.firstOrNull { it.second == null }?.first?.id 
                     ?: (if (tickets.isEmpty()) 0 else tickets.random().id)
 
                 HeroProgressCard(
                     completed = completedCount,
                     total = totalCount,
-                    onStartClick = { onStartTest(nextTicketId) }
+                    onStartClick = { onTicketClick(nextTicketId) }
                 )
 
                 ActionButtonsRow(
-                    onQuickTest = { onQuickTestClick(nextTicketId) },
+                    onQuickTest = { onTicketClick(nextTicketId) },
                     onAllTickets = onAllTicketsClick,
                     onShowProgress = { onShowProgressChange(true) }
                 )
@@ -351,7 +345,7 @@ fun ProgressDialog(
                 val totalTickets = ticketsWithProgress.size
 
                 Text(
-                    text = "Până acum ai finalizat $completedTickets din $totalTickets misiuni. Scorul tău mediu de performanță este de $averageScore%. Continuă să înveți!",
+                    text = "Până acum ai finalizat $completedTickets din $totalTickets bilete. Scorul tău mediu de performanță este de $averageScore%. Continuă să înveți!",
                     style = MaterialTheme.typography.bodyLarge
                 )
 
@@ -363,34 +357,24 @@ fun ProgressDialog(
                         fontWeight = FontWeight.Bold
                     )
                     answeredTickets.forEach { (ticket, progress) ->
-                        Column {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = ticket.title,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    Text(
-                                        text = "Bilet ${ticket.id}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                Text(
-                                    text = "${progress?.correct ?: 0}/${progress?.total ?: 0}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = ticket.title,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "${progress?.correct ?: 0}/${progress?.total ?: 0}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
                     }
                 } else {
@@ -451,9 +435,7 @@ fun DashboardContentPreview(
             snackbarHostState = remember { SnackbarHostState() },
             currentUserEmail = "student@example.md",
             onShowProgressChange = {},
-            onStartTest = {},
             onAllTicketsClick = {},
-            onQuickTestClick = {},
             onTicketClick = {},
             onLogout = {}
         )
@@ -473,9 +455,7 @@ fun DashboardContentDarkPreview(
             snackbarHostState = remember { SnackbarHostState() },
             currentUserEmail = "student@example.md",
             onShowProgressChange = {},
-            onStartTest = {},
             onAllTicketsClick = {},
-            onQuickTestClick = {},
             onTicketClick = {},
             onLogout = {}
         )
@@ -493,9 +473,7 @@ fun DashboardLoadingPreview() {
             snackbarHostState = remember { SnackbarHostState() },
             currentUserEmail = null,
             onShowProgressChange = {},
-            onStartTest = {},
             onAllTicketsClick = {},
-            onQuickTestClick = {},
             onTicketClick = {},
             onLogout = {}
         )

@@ -6,7 +6,7 @@ import com.google.firebase.FirebaseApp
 class EduBankApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        // This initializes all Firebase services linked via google-services.json
+        // Inițiază toate serviciile Firebase specificate în google.json
         FirebaseApp.initializeApp(this)
     }
 }

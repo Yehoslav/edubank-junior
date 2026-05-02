@@ -276,49 +276,53 @@ private val sampleQuestions = listOf(
 )
 
 class LightQuizPreviewParameterProvider : PreviewParameterProvider<QuizPreviewState> {
-    override val values = sequenceOf(
-        QuizPreviewState(
-            name = "Light Mode",
-            uiState = QuizUiState.Success(sampleQuestions),
-            darkTheme = false
-        ),
-        QuizPreviewState(
-            name = "Correct Answer",
-            uiState = QuizUiState.Success(sampleQuestions),
-            selectedOptionIndex = 0,
-            showFeedback = true
-        ),
-        QuizPreviewState(
-            name = "Wrong Answer",
-            uiState = QuizUiState.Success(sampleQuestions),
-            selectedOptionIndex = 1,
-            showFeedback = true
-        ),
-    )
+    override val values = sampleQuestions.first().let { q ->
+        sequenceOf(
+            QuizPreviewState(
+                name = "Light Mode",
+                uiState = QuizUiState.Success(sampleQuestions),
+                darkTheme = false
+            ),
+            QuizPreviewState(
+                name = "Correct Answer",
+                uiState = QuizUiState.Success(sampleQuestions),
+                selectedOptionIndex = q.correctIndex,
+                showFeedback = true
+            ),
+            QuizPreviewState(
+                name = "Wrong Answer",
+                uiState = QuizUiState.Success(sampleQuestions),
+                selectedOptionIndex = (q.correctIndex + 1) % q.options.size,
+                showFeedback = true
+            ),
+        )
+    }
 }
 
 class DarkQuizPreviewParameterProvider : PreviewParameterProvider<QuizPreviewState> {
-    override val values = sequenceOf(
-        QuizPreviewState(
-            name = "Light Mode",
-            uiState = QuizUiState.Success(sampleQuestions),
-            darkTheme = true
-        ),
-        QuizPreviewState(
-            name = "Correct Answer",
-            uiState = QuizUiState.Success(sampleQuestions),
-            selectedOptionIndex = 0,
-            darkTheme = true,
-            showFeedback = true
-        ),
-        QuizPreviewState(
-            name = "Wrong Answer",
-            uiState = QuizUiState.Success(sampleQuestions),
-            selectedOptionIndex = 1,
-            darkTheme = true,
-            showFeedback = true
-        ),
-    )
+    override val values = sampleQuestions.first().let { q ->
+        sequenceOf(
+            QuizPreviewState(
+                name = "Light Mode",
+                uiState = QuizUiState.Success(sampleQuestions),
+                darkTheme = true
+            ),
+            QuizPreviewState(
+                name = "Correct Answer",
+                uiState = QuizUiState.Success(sampleQuestions),
+                selectedOptionIndex = q.correctIndex,
+                darkTheme = true,
+                showFeedback = true
+            ),
+            QuizPreviewState(
+                name = "Wrong Answer",
+                uiState = QuizUiState.Success(sampleQuestions),
+                selectedOptionIndex = (q.correctIndex + 1) % q.options.size,
+                darkTheme = true,
+                showFeedback = true
+            ),
+        )
+    }
 }
 
 class MissionCompletePreviewParameterProvider : PreviewParameterProvider<QuizPreviewState> {

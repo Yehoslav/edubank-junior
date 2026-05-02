@@ -28,44 +28,34 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val db = Firebase.firestore
-        val auth = Firebase.auth
+        // Firebase se inițiază în fișierul ./EduBankApplication.kt
+        val repository = QuizRepository(Firebase.auth, Firebase.firestore)
 
         enableEdgeToEdge()
         setContent {
-            val repository = remember { QuizRepository(auth, db) }
-
             EduBankJuniorTheme {
                 val navController = rememberNavController()
                 val ticketsViewModel = remember { TicketsViewModel(repository) }
                 val snackbarHostState = remember { SnackbarHostState() }
+                val navigateToTicket = { ticketId: Int ->
+                    navController.navigate("quiz/$ticketId")
+                }
 
                 NavHost(
                     navController = navController,
-                    startDestination = if (auth.currentUser == null) "auth" else "dashboard"
+                    startDestination = if (repository.currentUser == null) "auth" else "dashboard"
                 ) {
                     composable("auth") {
-                        val authViewModel = remember { AuthViewModel(repository) }
                         AuthScreen(
-                            authViewModel,
+                            viewModel = remember { AuthViewModel(repository) },
                             snackbarHostState = snackbarHostState,
                             onAuthSuccess = {
                                 navController.navigate("dashboard") {
+                                    // Elimină din istoricul de navigare fereastra de autentificare
+                                    // astfel când utilizatorul va naviga înapoi din `Dashboard` aplicația
+                                    // nu se va muta pe fereastra de navigare, ci se va închide
                                     popUpTo("auth") { inclusive = true }
                                 }
-                            }
-                        )
-                    }
-
-                    composable("dashboard/tickets") {
-                        TicketListScreen(
-                            ticketsViewModel,
-                            snackbarHostState = snackbarHostState,
-                            onTicketClick = { ticketId ->
-                                navController.navigate("quiz/$ticketId")
-                            },
-                            onNavigateBack = {
-                                navController.popBackStack()
                             }
                         )
                     }
@@ -74,16 +64,23 @@ class MainActivity : ComponentActivity() {
                         DashboardScreen(
                             viewModel = ticketsViewModel,
                             snackbarHostState = snackbarHostState,
-                            onStartTest = { ticketId -> navController.navigate("quiz/$ticketId") },
+                            onTicketClick = navigateToTicket,
                             onAllTicketsClick = { navController.navigate("dashboard/tickets") },
-                            onQuickTestClick = { ticketId -> navController.navigate("quiz/$ticketId") },
-                            onTicketClick = { ticketId -> navController.navigate("quiz/$ticketId") },
                             onLogout = {
                                 repository.signOut()
                                 navController.navigate("auth") {
                                     popUpTo("dashboard") { inclusive = true }
                                 }
                             }
+                        )
+                    }
+
+                    composable("dashboard/tickets") {
+                        TicketListScreen(
+                            viewModel = ticketsViewModel,
+                            snackbarHostState = snackbarHostState,
+                            onTicketClick = navigateToTicket,
+                            onNavigateBack = { navController.popBackStack() }
                         )
                     }
 
@@ -94,7 +91,7 @@ class MainActivity : ComponentActivity() {
                         val ticketId = backStackEntry.arguments?.getInt("ticketId") ?: 0
                         val quizViewModel = remember { QuizViewModel(repository) }
                         quizViewModel.loadQuestions(ticketId)
-                        QuizScreen(ticketId = ticketId, viewModel = quizViewModel, onNavigateBack = {
+                        QuizScreen(ticketId, quizViewModel, onNavigateBack = {
                             navController.popBackStack()
                         })
                     }

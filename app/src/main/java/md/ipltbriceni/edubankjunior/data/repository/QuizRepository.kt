@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.channels.awaitClose
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -18,7 +19,6 @@ class QuizRepository(
     private val db: FirebaseFirestore
 ) {
 
-
     fun getTickets(): Flow<Result<List<Ticket>>> = callbackFlow {
         // Se folosește callbackFlow pentru a ține interfața sincronizată cu baza de date.
         // Adică la schimbarea valorilor în Firebase interfața se va împrospăta automat.
@@ -26,7 +26,7 @@ class QuizRepository(
             .orderBy("id")
             .addSnapshotListener { snapshot, error ->
                 // addSnapshotListener ia ca parametru o funcție care va fi chemată de fiecare dată
-                // cînd au loc modificări pe Firebase. Ea nu are return, ci trimite datele către
+                // când au loc modificări pe Firebase. Ea nu are return, ci trimite datele
                 // ca rezultat a funcției getTickets. Trimiterea se face prin trySend
                 if (error != null) {
                     trySend(Result.failure(error))
@@ -76,6 +76,9 @@ class QuizRepository(
 
     val currentUserEmail: String?
         get() = auth.currentUser?.email
+
+    val currentUser: FirebaseUser?
+        get() = auth.currentUser
 
     // --- Scor ---
     fun getUserProgress(): Flow<Map<String, TicketProgress>> = callbackFlow {

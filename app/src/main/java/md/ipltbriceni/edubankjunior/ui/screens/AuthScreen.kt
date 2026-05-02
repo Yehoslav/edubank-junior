@@ -44,80 +44,83 @@ fun AuthScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { innerPadding ->
-        AuthContent(
-            modifier = Modifier.padding(innerPadding),
-            isLoading = viewModel.isLoading,
-            onAuthClick = { isLogin, email, password ->
-                viewModel.performAuth(isLogin, email, password, onAuthSuccess)
-            }
-        )
-    }
+    AuthContent(
+        isLoading = viewModel.isLoading,
+        snackbarHostState = snackbarHostState,
+        onAuthClick = { isLogin, email, password ->
+            viewModel.performAuth(isLogin, email, password, onAuthSuccess)
+        }
+    )
 }
 
 @Composable
 fun AuthContent(
     modifier: Modifier = Modifier,
     isLoading: Boolean,
+    snackbarHostState: SnackbarHostState? = null,
     onAuthClick: (isLogin: Boolean, email: String, password: String) -> Unit
 ) {
     var isLogin by remember { mutableStateOf(true) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = if (isLogin) "EduBank Junior" else "Creează Cont",
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.primary
-        )
+    Scaffold(
+        modifier = modifier,
+        snackbarHost = { snackbarHostState?.let { SnackbarHost(it) } }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = if (isLogin) "EduBank Junior" else "Creează Cont",
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
 
-        Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(40.dp))
 
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Parolă") },
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
-            singleLine = true
-        )
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Parolă") },
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true
+            )
 
-        Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(32.dp))
 
-        if (isLoading) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        } else {
-            Button(
-                onClick = { onAuthClick(isLogin, email, password) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(if (isLogin) "Conectare" else "Înregistrare")
-            }
+            if (isLoading) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            } else {
+                Button(
+                    onClick = { onAuthClick(isLogin, email, password) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(if (isLogin) "Conectare" else "Înregistrare")
+                }
 
-            TextButton(onClick = { isLogin = !isLogin }) {
-                Text(if (isLogin) "Nu ai cont? Înregistrează-te" else "Ai deja cont? Loghează-te")
+                TextButton(onClick = { isLogin = !isLogin }) {
+                    Text(if (isLogin) "Nu ai cont? Înregistrează-te" else "Ai deja cont? Loghează-te")
+                }
             }
         }
     }
